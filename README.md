@@ -1,5 +1,28 @@
 # Liquirizia.DataAccessObject.Implements.Sqlite
-Database Data Access Object of Liquirizia for Sqlite
+Data Access Object of Liquirizia for Sqlite
+
+## Sqlite
+### Supported Model Types
+- TABLE
+- VIEW
+### Supported Data Types
+- NULL
+- INTEGER
+- REAL
+- TEXT
+- BLOB
+### Supported Constraints
+- NOT NULL
+- DEFAULT
+- CHECK
+### Supported Keys
+- PRIMARY KEY
+- FOREIGN KEY
+### Supported Indexes  
+- INDEX
+- UNIQUE INDEX
+### Supoorted Features
+- AUTOINCREMENT
 
 ## 사용 방법
 ```python
@@ -86,3 +109,6 @@ if __name__ == '__main__':
 	except Exception as e:
 		print(str(e), file=sys.stderr)
 ```
+
+## 참고
+- [Sqlite Documents](https://www.sqlite.org/docs.html)
