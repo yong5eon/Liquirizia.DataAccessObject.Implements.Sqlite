@@ -6,8 +6,6 @@ from Liquirizia.DataAccessObject.Properties.Database.Errors import *
 
 from Liquirizia.DataAccessObject.Implements.Sqlite import DataAccessObject, DataAccessObjectConfiguration
 
-from Liquirizia.DataAccessModelObject import DataAccessModelObject
-
 from sys import stdout, stderr
 from random import randrange
 
@@ -15,7 +13,7 @@ from random import randrange
 class Student(Table(
 	name='STUDENT',
 	description='Student',
-	primaryKey=PrimaryKey(name='PK_STUDENT', columns='ID'),
+	primaryKey=PrimaryKey(columns='ID'),
 	indexes=(
 		IndexUnique(name='IDX_STUDENT_CODE', columns='CODE'),
 		Index(name='IDX_STUDENT_IS_DELETED', columns='IS_DELETED'),
@@ -35,7 +33,7 @@ class Student(Table(
 class Class(Table(
 	name='CLASS',
 	description='Class',
-	primaryKey=PrimaryKey(name='PK_CLASS', coulmns='ID'),
+	primaryKey=PrimaryKey(coulmns='ID'),
 	indexes=(
 		IndexUnique(name='IDX_CLASS_CODE', columns='CODE'),
 		Index(name='IDX_CLASS_IS_DELETED', columns='IS_DELETED'),
@@ -54,7 +52,7 @@ class Class(Table(
 class StudentOfClass(Table(
 	name='STUDENT_CLASS',
 	descrption='Joined Class in each Student',
-	primaryKey=PrimaryKey(name='PK_STUDENT_CLASS', columns='STUDENT, CLASS')
+	primaryKey=PrimaryKey(columns='STUDENT, CLASS')
 	foreignKeys=(
 		ForeignKey(name='FK_STUDENT_CLASS_STUDENT', reference=Student, on=Student.id),
 		ForeignKey(name='FK_STUDENT_CLASS_CLASS', reference=Class, on=Class.id)
