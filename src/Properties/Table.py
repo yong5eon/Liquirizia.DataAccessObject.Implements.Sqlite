@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from typing import Any
-from Liquirizia.DataModelObject import (
-	DataModelObjectFactory,
-	DataModelObject,
-	DataAttributeObject,
+from Liquirizia.DataModel import (
+	ModelFactory,
+	Model,
+	Attribute,
 )
 
 from .Property import Property
@@ -19,7 +19,7 @@ __all__ = (
 )
 
 
-class Table(DataModelObjectFactory):
+class Table(ModelFactory):
 	def __init__(
 		self, 
 		name: str, 
@@ -34,16 +34,15 @@ class Table(DataModelObjectFactory):
 		self.obj = None
 		return
 	
-	def __call__(self, obj):
+	def __call__(self, obj: Model):
 		self.obj = obj
 		obj.ToString = self.toString
 		return obj
 	
 	def toString(self):
 		_ = []
-		# TODO : Add Columns
 		for k, v in self.obj.__dict__.items():
-			if isinstance(v, DataAttributeObject):
+			if isinstance(v, Attribute):
 				_.append(v.toString())
 		if self.primaryKey:
 			_.append(str(self.primaryKey))

@@ -1,23 +1,21 @@
 # -*- coding: utf-8 -*-
 
-from Liquirizia.DataModelObject import DataAttributeObject
+from Liquirizia.DataModel import Attribute, ModelHandler
+from Liquirizia.Validator.Validator import Validator
 
 from abc import abstractmethod
-
-from Liquirizia.DataModelObject.DataModelObjectHandler import DataModelObjectHandler
-from Liquirizia.Validator.Validator import Validator
 
 __all__ = (
 	'Type'
 )
 
 
-class Type(DataAttributeObject):
+class Type(Attribute):
 	def __init__(
 			self, 
 			name: str, 
 			va: Validator = Validator(),
-			fn: DataModelObjectHandler = None
+			fn: ModelHandler = None
 		):
 		super().__init__(va, fn)
 		self.name = name
