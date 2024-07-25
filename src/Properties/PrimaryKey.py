@@ -9,7 +9,7 @@ __all__ = (
 
 class PrimaryKey(Property):
 	def __init__(self, columns, desc=False):
-		self.columns = columns if isinstance(columns, (tuple, list)) else (columns)
+		self.columns = columns if isinstance(columns, (tuple, list)) else [columns]
 		self.desc = desc
 		return
 	

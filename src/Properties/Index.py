@@ -10,16 +10,15 @@ __all__ = (
 class Index(Property):
 	def __init__(
 		self, 
-		name,
-		table,
-		columns,
-		exists=None,
-		expr=None,
-		null=None,
+		name: str,
+		columns: list[str],
+		exists: bool = None,
+		expr: str = None,
+		null: str = None,
 	):
 		self.name = name
-		self.table = table
-		self.columns = columns if isinstance(columns, (tuple, list)) else (columns)
+		self.table = None
+		self.columns = columns if isinstance(columns, (tuple, list)) else [columns]
 		self.exists = exists
 		self.expr = expr
 		self.null = null
