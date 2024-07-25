@@ -13,12 +13,22 @@ __all__ = (
 class Type(Attribute):
 	def __init__(
 			self, 
-			name: str, 
+			key: str,
+			null: bool = False,
+			default: str = None,
+			check: str = None,
+			primaryKey: bool = False,
+			primaryKeyDesc: bool = False,
 			va: Validator = Validator(),
 			fn: ModelHandler = None
 		):
 		super().__init__(va, fn)
-		self.name = name
+		self.key = key
+		self.null = null
+		self.default = default
+		self.check = check
+		self.primaryKey = primaryKey
+		self.primaryKeyDesc = primaryKeyDesc
 		return
 	
 	@abstractmethod
