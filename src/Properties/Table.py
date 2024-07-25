@@ -31,26 +31,15 @@ class Table(ModelFactory):
 		self.primaryKey = primaryKey
 		self.foreignKeys = foreignKeys
 		self.indexes = indexes
-		self.obj = None
+		for index in self.indexes if self.indexes else []: index.table = name
 		return
 	
 	def __call__(self, obj: Model):
-		self.obj = obj
-		obj.ToString = self.toString
+		obj.__properties__ = {
+			'name': self.name,
+			'primaryKey': self.primaryKey,
+			'foreignKeys': self.foreignKeys,
+			'indexes': self.indexes,
+		}
 		return obj
-	
-	def toString(self):
-		_ = []
-		for k, v in self.obj.__dict__.items():
-			if isinstance(v, Attribute):
-				_.append(v.toString())
-		if self.primaryKey:
-			_.append(str(self.primaryKey))
-		_.extend([str(foreignKey) for foreignKey in self.foreignKeys] if self.foreignKeys else [])
-		__ = ['CREATE TABLE {}({})'.format(
-			self.name,
-			',\n'.join(_)
-		)]
-		__.extend([str(index) for index in self.indexes] if self.indexes else [])
-		return __
 	
