@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from Liquirizia.Validator import Validator
+from Liquirizia.Validator import Validator, Pattern
+from Liquirizia.Validator.Patterns import (
+	SetDefault,
+	IsAbleToNone,
+	IsNotToNone,
+	IsInteger
+)
 
 from .Type import Type
 
@@ -15,32 +21,31 @@ class Integer(Type):
 			name: str, 
 			null: bool = False,
 			default: str = None,
-			check: str = None,
 			autoincrement: bool = False,
 			primaryKey: bool = False,
 			primaryKeyDesc: bool = False,
-			va: Validator = Validator(),
+			reference: Type = None,
+			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
 		):
+		patterns = []
+		if default:
+			patterns.append(SetDefault(default))
+		if null:
+			patterns.append(IsAbleToNone())
+		else:
+			patterns.append(IsNotToNone())
+		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]
+		patterns.append(IsInteger(*vaps))
 		super().__init__(
 			key=name, 
+			type='INTEGER',
 			null=null,
 			default=default,
-			check=check,
+			autoincrement=autoincrement,
 			primaryKey=primaryKey,
 			primaryKeyDesc=primaryKeyDesc,
-			va=va, 
+			reference=reference,
+			va=Validator(*patterns), 
 			fn=None
 		)
-		self.autoincrement = autoincrement
 		return
-
-	def __str__(self):
-		return '{} INTEGER{}{}{}{}{}'.format(
-			self.key,
-			' NOT NULL' if not self.null else '',
-			' DEFAULT {}'.format(self.default) if self.default else '',
-			' CHECK({})'.format(self.check) if self.check else '',
-			' AUTOINCREMENT' if self.autoincrement else '',
-			' PRIMARY KEY' if self.primaryKey else '',
-			' DESC' if self.primaryKey and self.desc else ''
-		)

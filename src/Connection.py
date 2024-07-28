@@ -7,11 +7,15 @@ from Liquirizia.DataAccessObject import Error
 from Liquirizia.DataAccessObject.Errors import *
 from Liquirizia.DataAccessObject.Properties.Database.Errors import *
 
+from Liquirizia.DataModel import ModelExecutor
+
 from .Configuration import Configuration
 from .Formatter import Formatter
 
 from sqlite3 import connect, Row
 from sqlite3 import DatabaseError, IntegrityError, ProgrammingError, OperationalError, NotSupportedError
+
+from collections.abc import Iterable
 
 __all__ = (
 	'DatabaseAccessObject'
@@ -89,7 +93,27 @@ class Connection(BaseConnection, Database):
 		except Exception as e:
 			raise Error(str(e), error=e)
 		return
-
+	
+	def run(self, executor: ModelExecutor):
+		try:
+			if isinstance(executor, Iterable):
+				for query in executor:
+					self.cursor.execute(query)
+				return
+			self.cursor.execute(str(executor), executor.args)
+			def transform(rows):
+				li = []  # the dictionary to be filled with the row data and to be returned
+				for i, row in enumerate(rows):  # iterate throw the sqlite3.Row objects
+					li.append(dict(row))
+				return li
+			return transform(self.cursor.fetchall())[0]
+		except (DatabaseError, IntegrityError, ProgrammingError, NotSupportedError) as e:
+			raise ExecuteError(str(e), sql=query, error=e)
+		except OperationalError as e:
+			raise ConnectionClosedError(error=e)
+		except Exception as e:
+			raise Error(str(e), error=e)
+	
 	def affected(self):
 		return self.connection.total_changes
 

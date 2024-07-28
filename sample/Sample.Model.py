@@ -1,68 +1,80 @@
 # -*- coding: utf-8 -*-
 
-from Liquirizia.DataAccessObject import DataAccessObjectHelper
+from Liquirizia.DataAccessObject import Helper
 from Liquirizia.DataAccessObject.Errors import *
 from Liquirizia.DataAccessObject.Properties.Database.Errors import *
 
-from Liquirizia.DataAccessObject.Implements.Sqlite import DataAccessObject, DataAccessObjectConfiguration
+from Liquirizia.DataAccessObject.Implements.Sqlite import Configuration, Connection
+from Liquirizia.DataAccessObject.Implements.Sqlite.Types import *
+from Liquirizia.DataAccessObject.Implements.Sqlite.Properties import *
+from Liquirizia.DataAccessObject.Implements.Sqlite.Executors import *
+
+from Liquirizia.DataModel import Model
 
 from sys import stdout, stderr
 from random import randrange
 
 # Tables
-class Student(Table(
-	name='STUDENT',
-	description='Student',
-	primaryKey=PrimaryKey(columns='ID'),
+@Table(
+	name = 'STUDENT',
+	primaryKey=PrimaryKey('ID'),
 	indexes=(
-		IndexUnique(name='IDX_STUDENT_CODE', columns='CODE'),
+		IndexUnique('IDX_UNIQUE_STUDENT_CODE', columns='CODE'),
 		Index(name='IDX_STUDENT_IS_DELETED', columns='IS_DELETED'),
 		Index(name='IDX_STUDENT_AT_CREATED', columns='AT_CREATED'),
-		Index(name='IDX_STUDENT_AT_UPDATED', columns='AT_UPDATED'),
+		Index(name='IDX_STUDENT_AT_UPDATED', columns='AT_UPDATED', null='LAST'),
 	)
-)):
-	id = Integer(name='ID', description='Identifier', autoincrement=True)
-	code = Text(name='CODE', description='Student Code')
-	name = Text(name='NAME', description='Student Name')
-	metadata = Buffer(name='METADATA', description='Student Metadata File')
-	atCreated = DateTime(name='AT_CREATED', default=now(), description='Created DateTime')
-	atUpdated = Timestamp(name='AT_UPDATED', null=True ,description='Updated Timestampe')
-	isDeleted = Text(name='IS_DELETED', default='N', check=IsIn('Y', 'N'), description='Is Deleted(Y/N)')
+)
+class Student(Model):
+	id = Integer('ID', autoincrement=True)
+	code = Text('CODE')
+	name = Text(name='NAME')
+	metadata = ByteStream(name='METADATA')
+	atCreated = DateTime(name='AT_CREATED', default='"NOW"')
+	atUpdated = Timestamp(name='AT_UPDATED', null=True)
+	isDeleted = Text(name='IS_DELETED', default='"N"', vaps=IsIn('Y', 'N'))
 
-
-class Class(Table(
+@Table(
 	name='CLASS',
-	description='Class',
-	primaryKey=PrimaryKey(coulmns='ID'),
+	primaryKey=PrimaryKey('ID'),
 	indexes=(
 		IndexUnique(name='IDX_CLASS_CODE', columns='CODE'),
 		Index(name='IDX_CLASS_IS_DELETED', columns='IS_DELETED'),
 		Index(name='IDX_CLASS_AT_CREATED', columns='AT_CREATED'),
 		Index(name='IDX_CLASS_AT_UPDATED', columns='AT_UPDATED'),
 	)
-)):
-	id = Integer(name='ID', description='Identifier', autoincrement=True)
-	code = Text(name='CODE', description='Class Code')
-	name = Text(name='NAME', description='')
-	atCreated = DateTime(name='AT_CREATED', default=now(), description='Created DateTime')
-	atUpdated = Timestamp(name='AT_UPDATED', null=True ,description='Updated Timestampe')
-	isDeleted = Text(name='IS_DELETED', default='N', check=In('Y', 'N'), description='Is Deleted(Y/N)')
+)
+class Class(Model):
+	id = Integer(name='ID', autoincrement=True, primaryKey=True)
+	code = Text(name='CODE')
+	name = Text(name='NAME')
+	atCreated = DateTime(name='AT_CREATED', default='"NOW"')
+	atUpdated = Timestamp(name='AT_UPDATED', null=True)
+	isDeleted = Text(name='IS_DELETED', default='"N"', vaps=IsIn('Y', 'N'))
 
 
-class StudentOfClass(Table(
+@Table(
 	name='STUDENT_CLASS',
-	descrption='Joined Class in each Student',
-	primaryKey=PrimaryKey(columns='STUDENT, CLASS')
+	primaryKey=PrimaryKey(('STUDENT', 'CLASS')),
 	foreignKeys=(
-		ForeignKey(name='FK_STUDENT_CLASS_STUDENT', reference=Student, on=Student.id),
-		ForeignKey(name='FK_STUDENT_CLASS_CLASS', reference=Class, on=Class.id)
+		ForeignKey(columns='STUDENT', table='STUDENT', references='ID'),
+		ForeignKey(columns='CLASS', table='CLASS', references='ID')
 	),
-)):
-	studentId = Integer(name='STUDENT', description='Student Identifier')
-	classId = Integer(name='CLASS' description='Class Indentifier')
-	score = Real(name='SCORE', description='Student\'s Score of Class' null=True)
-	atCreated = DateTime(name='AT_CREATED', default='NOW()', description='Created DateTime')
-	atUpdated = Timestamp(name='AT_UPDATED', null=True ,description='Updated Timestampe')
+	indexes=(
+		Index(name='IDX_STUDENT_CLASS_SCORE', columns='IS_DELETED'),
+		Index(name='IDX_STUDENT_CLASS_AT_CREATED', columns='AT_CREATED'),
+		Index(name='IDX_STUDENT_CLASS_AT_UPDATED', columns='AT_UPDATED'),
+	)
+)
+class StudentOfClass(Model):
+	studentId = Integer(name='STUDENT')
+	studentName = Text(name='STUDENT_NAME', reference=Student.name)
+	classId = Integer(name='CLASS')
+	className = Text(name='CLASS_NAME', reference=Class.name)
+	score = Float(name='SCORE', null=True)
+	atCreated = DateTime(name='AT_CREATED', default='"NOW"')
+	atUpdated = Timestamp(name='AT_UPDATED', null=True)
+
 
 # View 
 
@@ -90,17 +102,17 @@ if __name__ == '__main__':
 
 	try:
 		# Set connection
-		DataAccessObjectHelper.Set(
+		Helper.Set(
 			'Sample',
-			DataAccessObject,
-			DataAccessObjectConfiguration(
-				path='Sample.DB',  # File Path for SQLite Database File
+			Connection,
+			Configuration(
+				path='tmp/Sample.DB',  # File Path for SQLite Database File
 				autocommit=False
 			)
 		)
 
 		# Get Connection
-		con = DataAccessObjectHelper.Get('Sample')
+		con = Helper.Get('Sample')
 		con.begin()
 		# create table
 		con.execute(Create(Student))

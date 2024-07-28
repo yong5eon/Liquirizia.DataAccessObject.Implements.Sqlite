@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from Liquirizia.Validator import Validator
+from Liquirizia.Validator import Validator, Pattern
+from Liquirizia.Validator.Patterns import (
+	SetDefault,
+	IsAbleToNone,
+	IsNotToNone,
+	IsInteger
+)
 
 from .Type import Type
 
@@ -15,29 +21,29 @@ class Timestamp(Type):
 			name: str, 
 			null=False,
 			default=None,
-			check: str = None,
 			primaryKey: bool  = False,
 			primaryKeyDesc: bool = False,
-			va: Validator = Validator(),
+			reference: Type = None,
+			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
 		):
+		patterns = []
+		if default:
+			patterns.append(SetDefault(default))
+		if null:
+			patterns.append(IsAbleToNone())
+		else:
+			patterns.append(IsNotToNone())
+		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]
+		patterns.append(IsInteger(*vaps))
 		super().__init__(
 			name,
+			type='TIMESTAMP',
 			null=null,
 			default=default,
-			check=check,
 			primaryKey=primaryKey,
 			primaryKeyDesc=primaryKeyDesc,
-			va=va, 
+			reference=reference,
+			va=Validator(*patterns), 
 			fn=None,
 		)
 		return
-
-	def __str__(self):
-		return '{} INTEGER{}{}{}{}{}'.format(
-			self.key,
-			' NOT NULL' if not self.null else '',
-			' DEFAULT {}'.format(self.default) if self.default else '',
-			' CHECK({})'.format(self.check) if self.check else '',
-			' PRIMARY KEY' if self.primaryKey else '',
-			' DESC' if self.primaryKey and self.desc else ''
-		)
