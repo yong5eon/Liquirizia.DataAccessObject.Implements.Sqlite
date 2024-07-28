@@ -4,14 +4,12 @@ from datetime import datetime
 import json
 
 __all__ = (
-	'DataAccessObjectFormatter'
+	'Formatter'
 )
 
 
-class DataAccessObjectFormatter(object):
-	"""
-	Data Access Object Query Formatter for Sqlite
-	"""
+class Formatter(object):
+	"""Query Formatter for Sqlite"""
 
 	def __init__(self, sql, *args, **kwargs):
 		self.sql = sql
