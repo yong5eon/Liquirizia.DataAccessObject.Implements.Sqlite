@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from Liquirizia.DataAccessObject import DataAccessObjectHelper
+from Liquirizia.DataAccessObject import Helper, Error
 from Liquirizia.DataAccessObject.Errors import *
 from Liquirizia.DataAccessObject.Properties.Database.Errors import *
 
-from Liquirizia.DataAccessObject.Implements.Sqlite import DataAccessObject, DataAccessObjectConfiguration
+from Liquirizia.DataAccessObject.Implements.Sqlite import Configuration, Connection
 
 import sys
 
@@ -14,18 +14,18 @@ if __name__ == '__main__':
 
 	try:
 		# Set connection
-		DataAccessObjectHelper.Set(
+		Helper.Set(
 			'Sample',
-			DataAccessObject,
-			DataAccessObjectConfiguration(
-				path='Sample.DB',  # File Path for SQLite Database File
+			Connection,
+			Configuration(
+				path='tmp/Sample.DB',  # File Path for SQLite Database File
 				autocommit=False
 			)
 		)
 
 		# Get Connection
-		con = DataAccessObjectHelper.Get('Sample')
-	except DataAccessObjectConnectionError as e:
+		con = Helper.Get('Sample')
+	except Error as e:
 		print(str(e), file=sys.stderr)
 		exit(-1)
 	except Exception as e:
@@ -51,14 +51,14 @@ if __name__ == '__main__':
 
 		con.commit()
 		print('{} rows inserted'.format(con.affected()), file=sys.stdout)
-	except DataAccessObjectExecuteError as e:
+	except ExecuteError as e:
 		con.rollback()
 		print(str(e), file=sys.stderr)
-	except DataAccessObjectCommitError as e:
+	except CommitError as e:
 		print(str(e), file=sys.stderr)
-	except DataAccessObjectRollBackError as e:
+	except RollBackError as e:
 		print(str(e), file=sys.stderr)
-	except DataAccessObjectConnectionClosedError as e:
+	except ConnectionClosedError as e:
 		print(str(e), file=sys.stderr)
 		exit(-1)
 	except Exception as e:
@@ -73,9 +73,9 @@ if __name__ == '__main__':
 			print('{} : {}'.format(i, row), file=sys.stdout)
 
 		con.execute('DROP TABLE IF EXISTS LOG')
-	except DataAccessObjectExecuteError as e:
+	except ExecuteError as e:
 		print(str(e), file=sys.stderr)
-	except DataAccessObjectConnectionClosedError as e:
+	except ConnectionClosedError as e:
 		print(str(e), file=sys.stderr)
 		exit(-1)
 	except Exception as e:

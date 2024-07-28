@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from Liquirizia.DataAccessObject import DataAccessObject as DataAccessObjectBase
+from Liquirizia.DataAccessObject import Connection as BaseConnection
 from Liquirizia.DataAccessObject.Properties.Database import Database
 
-from Liquirizia.DataAccessObject import DataAccessObjectError
+from Liquirizia.DataAccessObject import Error
 from Liquirizia.DataAccessObject.Errors import *
 from Liquirizia.DataAccessObject.Properties.Database.Errors import *
 
-from .DataAccessObjectConfiguration import DataAccessObjectConfiguration
-from .DataAccessObjectFormatter import DataAccessObjectFormatter
+from .Configuration import Configuration
+from .Formatter import Formatter
 
 from sqlite3 import connect, Row
 from sqlite3 import DatabaseError, IntegrityError, ProgrammingError, OperationalError, NotSupportedError
@@ -18,15 +18,15 @@ __all__ = (
 )
 
 
-class DataAccessObject(DataAccessObjectBase, Database):
+class Connection(BaseConnection, Database):
+	"""Connection Class for Sqlite"""
 	"""
-	Data Access Object Class for Sqlite
+		# TODO :
 
-	# TODO :
 		* LIKE 검색 시 문자열 포메팅 오류 발생
 	"""
 
-	def __init__(self, conf: DataAccessObjectConfiguration):
+	def __init__(self, conf: Configuration):
 		self.conf = conf
 		self.connection = None
 		self.cursor = None
@@ -48,9 +48,9 @@ class DataAccessObject(DataAccessObjectBase, Database):
 			self.connection.row_factory = Row
 			self.cursor = self.connection.cursor()
 		except (DatabaseError) as e:
-			raise DataAccessObjectConnectionError(error=e)
+			raise ConnectionError(error=e)
 		except Exception as e:
-			raise DataAccessObjectError(str(e), error=e)
+			raise Error(str(e), error=e)
 		return
 
 	def close(self):
@@ -68,11 +68,11 @@ class DataAccessObject(DataAccessObjectBase, Database):
 				del self.connection
 				self.connection = None
 		except (DatabaseError, IntegrityError, ProgrammingError, NotSupportedError) as e:
-			raise DataAccessObjectExecuteError(error=e)
+			raise ExecuteError(error=e)
 		except OperationalError as e:
-			raise DataAccessObjectConnectionClosedError(error=e)
+			raise ConnectionClosedError(error=e)
 		except Exception as e:
-			raise DataAccessObjectError(str(e), error=e)
+			raise Error(str(e), error=e)
 		return
 
 	def begin(self):
@@ -80,14 +80,14 @@ class DataAccessObject(DataAccessObjectBase, Database):
 
 	def execute(self, sql, *args, **kwargs):
 		try:
-			query = str(DataAccessObjectFormatter(sql, *args, **kwargs))
+			query = str(Formatter(sql, *args, **kwargs))
 			self.cursor.execute(query)
 		except (DatabaseError, IntegrityError, ProgrammingError, NotSupportedError) as e:
-			raise DataAccessObjectExecuteError(str(e), sql=str(DataAccessObjectFormatter(sql, *args, **kwargs)), error=e)
+			raise ExecuteError(str(e), sql=str(Formatter(sql, *args, **kwargs)), error=e)
 		except OperationalError as e:
-			raise DataAccessObjectConnectionClosedError(error=e)
+			raise ConnectionClosedError(error=e)
 		except Exception as e:
-			raise DataAccessObjectError(str(e), error=e)
+			raise Error(str(e), error=e)
 		return
 
 	def affected(self):
@@ -102,33 +102,33 @@ class DataAccessObject(DataAccessObjectBase, Database):
 		try:
 			return transform(self.cursor.fetchall())
 		except (DatabaseError, IntegrityError, ProgrammingError, NotSupportedError) as e:
-			raise DataAccessObjectCursorError(error=e)
+			raise CursorError(error=e)
 		except OperationalError as e:
-			raise DataAccessObjectConnectionClosedError(error=e)
+			raise ConnectionClosedError(error=e)
 		except Exception as e:
-			raise DataAccessObjectError(str(e), error=e)
+			raise Error(str(e), error=e)
 
 	def count(self):
-		raise DataAccessObjectNotSupportedError('Sqlite is not support row count')
+		raise NotSupportedError('Sqlite is not support row count')
 
 	def commit(self):
 		try:
 			self.connection.commit()
 		except (DatabaseError, IntegrityError, ProgrammingError, NotSupportedError) as e:
-			raise DataAccessObjectCommitError(error=e)
+			raise CommitError(error=e)
 		except OperationalError as e:
-			raise DataAccessObjectConnectionClosedError(error=e)
+			raise ConnectionClosedError(error=e)
 		except Exception as e:
-			raise DataAccessObjectError(str(e), error=e)
+			raise Error(str(e), error=e)
 		return
 
 	def rollback(self):
 		try:
 			self.connection.rollback()
 		except (DatabaseError, IntegrityError, ProgrammingError, NotSupportedError) as e:
-			raise DataAccessObjectRollBackError(error=e)
+			raise RollBackError(error=e)
 		except OperationalError as e:
-			raise DataAccessObjectConnectionClosedError(error=e)
+			raise ConnectionClosedError(error=e)
 		except Exception as e:
-			raise DataAccessObjectError(str(e), error=e)
+			raise Error(str(e), error=e)
 		return
