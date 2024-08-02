@@ -1,25 +1,27 @@
 # -*- coding: utf-8 -*-
 
-from typing import Any
+from Liquirizia.DataAccessObject.Model import Type 
 from Liquirizia.DataModel import (
-	ModelFactory,
 	Model,
 	Attribute,
 )
 
-from .Property import Property
+from ..Constraint import (
+	PrimaryKey,
+	ForeignKey,
+)
 
-from .PrimaryKey import PrimaryKey
-from .ForeignKey import ForeignKey
-from .Index import Index
-from .IndexUnique import IndexUnique
+from ..Index import (
+	Index,
+	IndexUnique,
+)
 
 __all__ = (
 	'Table'
 )
 
 
-class Table(ModelFactory):
+class Table(Type):
 	def __init__(
 		self, 
 		name: str, 
@@ -41,5 +43,15 @@ class Table(ModelFactory):
 			'foreignKeys': self.foreignKeys,
 			'indexes': self.indexes,
 		}
+
+		def __new__(cls, **kwargs):
+			o = object.__new__(cls)
+			o.__object__ = dict()
+			for k, v in cls.__dict__.items():
+				if isinstance(v, Attribute):
+					v.__init_object__(o, kwargs[v.key] if v.key in kwargs.keys() else None)
+			return o
+		obj.__new__ = __new__
+
 		return obj
-	
+

@@ -2,41 +2,41 @@
 
 from Liquirizia.Validator import Validator, Pattern
 from Liquirizia.Validator.Patterns import (
+	SetDefault,
 	IsAbleToNone,
 	IsNotToNone,
-	SetDefault,
-	IsBytes,
-	IsByteStream,
+	IsInteger
 )
 
 from .Type import Type
 
 __all__ = (
-	'ByteStream'
+	'Timestamp'
 )
 
 
-class ByteStream(Type):
+class Timestamp(Type):
 	def __init__(
 			self, 
 			name: str, 
-			null: bool = False,
-			reference: Type = None,
+			null=False,
+			default=None,
 			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
 		):
-		patterns = []
-		if null:
-			patterns.append(IsAbleToNone())
-		else:
-			patterns.append(IsNotToNone())
 		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]
-		patterns.append(IsBytes(*vaps))
+		patterns = []
+		if default:
+			patterns.append(SetDefault(default))
+		if null:
+			patterns.append(IsAbleToNone(IsInteger(*vaps)))
+		else:
+			patterns.append(IsInteger(*vaps))
 		super().__init__(
-			key=name, 
-			type='BLOB',
+			name,
+			type='TIMESTAMP',
 			null=null,
-			reference=reference,
+			default=default,
 			va=Validator(*patterns), 
-			fn=None
+			fn=None,
 		)
 		return

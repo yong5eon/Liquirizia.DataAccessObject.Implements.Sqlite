@@ -5,25 +5,25 @@ from Liquirizia.Validator.Patterns import (
 	SetDefault,
 	IsAbleToNone,
 	IsNotToNone,
-	IsDateTime,
+	IsFloat,
 )
 
 from .Type import Type
 
-from datetime import datetime
-
 __all__ = (
-	'DateTime'
+	'Float'
 )
 
 
-class DateTime(Type):
+class Float(Type):
 	def __init__(
 			self, 
 			name: str, 
 			null: bool = False,
+			default: float = None,
+			primaryKey: bool = False,
+			primaryKeyDesc: bool = False,
 			reference: Type = None,
-			default: datetime = None,
 			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
 		):
 		patterns = []
@@ -33,14 +33,16 @@ class DateTime(Type):
 			patterns.append(IsAbleToNone())
 		else:
 			patterns.append(IsNotToNone())
-		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]
-		patterns.append(IsDateTime(*vaps))
+		if not isinstance(vaps, (tuple, list)): vaps = [vaps]
+		patterns.append(IsFloat(*vaps))
 		super().__init__(
 			key=name, 
-			type='DATETIME',
+			type='REAL',
 			null=null,
-			reference=reference,
 			default=default,
+			primaryKey=primaryKey,
+			primaryKeyDesc=primaryKeyDesc,
+			reference=reference,
 			va=Validator(*patterns), 
 			fn=None
 		)

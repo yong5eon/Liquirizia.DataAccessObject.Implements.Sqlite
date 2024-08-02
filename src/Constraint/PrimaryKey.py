@@ -1,18 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from .Property import Property
+from .Constraint import Constraint
 
 __all__ = (
 	'PrimaryKey'
 )
 
 
-class PrimaryKey(Property):
+class PrimaryKey(Constraint):
 	def __init__(self, columns):
 		self.columns = columns if isinstance(columns, (tuple, list)) else [columns]
 		return
 	
-	def __str__(self):
-		return 'PRIMARY KEY({})'.format(
-			', '.join(self.columns)
-		)

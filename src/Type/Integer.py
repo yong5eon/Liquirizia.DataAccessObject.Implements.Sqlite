@@ -11,39 +11,43 @@ from Liquirizia.Validator.Patterns import (
 from .Type import Type
 
 __all__ = (
-	'Timestamp'
+	'Integer'
 )
 
 
-class Timestamp(Type):
+class Integer(Type):
 	def __init__(
 			self, 
 			name: str, 
-			null=False,
-			default=None,
-			primaryKey: bool  = False,
+			null: bool = False,
+			default: str = None,
+			autoincrement: bool = False,
+			primaryKey: bool = False,
 			primaryKeyDesc: bool = False,
 			reference: Type = None,
 			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
 		):
+		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]
 		patterns = []
 		if default:
 			patterns.append(SetDefault(default))
 		if null:
-			patterns.append(IsAbleToNone())
+			patterns.append(IsAbleToNone(IsInteger(*vaps)))
 		else:
-			patterns.append(IsNotToNone())
-		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]
-		patterns.append(IsInteger(*vaps))
+			if autoincrement:
+				patterns.append(IsAbleToNone(IsInteger(*vaps)))
+			else:
+				patterns.append(IsInteger(*vaps))
 		super().__init__(
-			name,
-			type='TIMESTAMP',
+			key=name, 
+			type='INTEGER',
 			null=null,
 			default=default,
+			autoincrement=autoincrement,
 			primaryKey=primaryKey,
 			primaryKeyDesc=primaryKeyDesc,
 			reference=reference,
 			va=Validator(*patterns), 
-			fn=None,
+			fn=None
 		)
 		return

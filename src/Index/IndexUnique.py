@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from .Property import Property
-
 __all__ = (
 	'IndexUnique'
 )
 
 
-class IndexUnique(Property):
+class IndexUnique(object):
 	def __init__(
 		self, 
 		name: str,
@@ -22,11 +20,3 @@ class IndexUnique(Property):
 		self.notexists = notexists 
 		return
 	
-	def __str__(self):
-		return 'CREATE UNIQUE INDEX {}{} ON {}({}){}'.format(
-			'IF NOT EXISTS ' if self.notexists else '',
-			self.name,
-			self.table,
-			', '.join(self.colexprs),
-			' WHERE {}'.format(self.expr) if self.expr else '',
-		)

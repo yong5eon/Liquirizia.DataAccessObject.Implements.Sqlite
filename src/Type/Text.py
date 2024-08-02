@@ -5,40 +5,39 @@ from Liquirizia.Validator.Patterns import (
 	SetDefault,
 	IsAbleToNone,
 	IsNotToNone,
-	IsFloat,
+	IsNotEmpty,
+	IsString
 )
 
 from .Type import Type
 
 __all__ = (
-	'Float'
+	'Text'
 )
 
 
-class Float(Type):
+class Text(Type):
 	def __init__(
 			self, 
 			name: str, 
 			null: bool = False,
-			default: float = None,
-			autoincrement: bool = False,
+			default: str = None,
 			primaryKey: bool = False,
 			primaryKeyDesc: bool = False,
 			reference: Type = None,
 			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
 		):
+		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]
 		patterns = []
 		if default:
 			patterns.append(SetDefault(default))
 		if null:
-			patterns.append(IsAbleToNone())
+			patterns.append(IsAbleToNone(IsString(*vaps)))
 		else:
-			patterns.append(IsNotToNone())
-		if not isinstance(vaps, (tuple, list)): vaps = [vaps]
-		patterns.append(IsFloat(*vaps))
+			patterns.append(IsString(*vaps))
 		super().__init__(
 			key=name, 
-			type='REAL',
+			type='TEXT',
 			null=null,
 			default=default,
 			primaryKey=primaryKey,
@@ -47,5 +46,4 @@ class Float(Type):
 			va=Validator(*patterns), 
 			fn=None
 		)
-		self.autoincrement = autoincrement
 		return

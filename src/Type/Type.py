@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from Liquirizia.DataModel import Attribute, ModelHandler
+from Liquirizia.DataModel import Attribute, Handler
 
 from Liquirizia.Validator.Validator import Validator
 
@@ -25,7 +25,7 @@ class Type(Attribute):
 			autoincrement: bool = False,
 			reference: Type = None,
 			va: Validator = Validator(),
-			fn: ModelHandler = None
+			fn: Handler = None
 		):
 		super().__init__(va, fn)
 		self.key = key
@@ -46,14 +46,3 @@ class Type(Attribute):
 			self.referenceKey = reference.key
 		return
 	
-	def __str__(self):
-		return '{} {}{}{}{}{}{}{}'.format(
-			self.key,
-			self.type,
-			' NOT NULL' if not self.null else '',
-			' DEFAULT {}'.format(self.default) if self.default else '',
-			' PRIMARY KEY' if self.primaryKey else '',
-			' AUTOINCREMENT' if self.primaryKey and self.autoincrement else '',
-			' DESC' if self.primaryKey and self.primaryKeyDesc else '',
-			' REFERENCES {}({})'.format(self.referenceTable, self.referenceKey) if self.reference else '',
-		)

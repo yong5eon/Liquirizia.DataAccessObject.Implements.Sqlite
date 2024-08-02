@@ -7,7 +7,11 @@ from Liquirizia.DataAccessObject import Error
 from Liquirizia.DataAccessObject.Errors import *
 from Liquirizia.DataAccessObject.Properties.Database.Errors import *
 
-from Liquirizia.DataModel import ModelExecutor
+from Liquirizia.DataAccessObject.Model import (
+	Executors,
+	Executor,
+	Executable,
+)
 
 from .Configuration import Configuration
 from .Formatter import Formatter
@@ -22,13 +26,8 @@ __all__ = (
 )
 
 
-class Connection(BaseConnection, Database):
+class Connection(BaseConnection, Database, Executable):
 	"""Connection Class for Sqlite"""
-	"""
-		# TODO :
-
-		* LIKE 검색 시 문자열 포메팅 오류 발생
-	"""
 
 	def __init__(self, conf: Configuration):
 		self.conf = conf
@@ -82,33 +81,45 @@ class Connection(BaseConnection, Database):
 	def begin(self):
 		pass
 
-	def execute(self, sql, *args, **kwargs):
+	def execute(self, sql, *args):
 		try:
-			query = str(Formatter(sql, *args, **kwargs))
-			self.cursor.execute(query)
+			self.cursor.execute(sql, args)
 		except (DatabaseError, IntegrityError, ProgrammingError, NotSupportedError) as e:
-			raise ExecuteError(str(e), sql=str(Formatter(sql, *args, **kwargs)), error=e)
+			raise ExecuteError(str(e), error=e, sql=sql, args=args)
 		except OperationalError as e:
 			raise ConnectionClosedError(error=e)
 		except Exception as e:
 			raise Error(str(e), error=e)
 		return
 	
-	def run(self, executor: ModelExecutor):
+	def runs(self, executors: Executors):
 		try:
-			if isinstance(executor, Iterable):
-				for query in executor:
-					self.cursor.execute(query)
-				return
-			self.cursor.execute(str(executor), executor.args)
+			for query, args in executors:
+				self.cursor.execute(query, args)
+		except (DatabaseError, IntegrityError, ProgrammingError, NotSupportedError) as e:
+			raise ExecuteError(str(e), error=e, sql=query)
+		except OperationalError as e:
+			raise ConnectionClosedError(error=e)
+		except Exception as e:
+			raise Error(str(e), error=e)
+	
+	def run(self, executor: Executor):
+		try:
+			self.cursor.execute(executor.query, executor.args)
 			def transform(rows):
 				li = []  # the dictionary to be filled with the row data and to be returned
 				for i, row in enumerate(rows):  # iterate throw the sqlite3.Row objects
 					li.append(dict(row))
 				return li
-			return transform(self.cursor.fetchall())[0]
+			rows = transform(self.cursor.fetchall())
+			__ = []
+			for row in rows:
+				__.append(executor.model(**row))
+			if len(__) == 1:
+				return __[0]
+			return __
 		except (DatabaseError, IntegrityError, ProgrammingError, NotSupportedError) as e:
-			raise ExecuteError(str(e), sql=query, error=e)
+			raise ExecuteError(str(e), error=e, sql=executor.query, args=executor.args)
 		except OperationalError as e:
 			raise ConnectionClosedError(error=e)
 		except Exception as e:

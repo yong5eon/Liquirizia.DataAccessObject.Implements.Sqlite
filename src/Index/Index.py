@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from .Property import Property
-
 __all__ = (
 	'Index'
 )
 
 
-class Index(Property):
+class Index(object):
 	def __init__(
 		self, 
 		name: str,
@@ -22,11 +20,3 @@ class Index(Property):
 		self.notexists = notexists
 		return
 	
-	def __str__(self):
-		return 'CREATE INDEX {}{} ON {}({}){}'.format(
-			'IF NOT EXISTS ' if self.notexists else '',
-			self.name,
-			self.table,
-			', '.join(self.colexprs),
-			' WHERE {}'.format(self.expr) if self.expr else '',
-		)

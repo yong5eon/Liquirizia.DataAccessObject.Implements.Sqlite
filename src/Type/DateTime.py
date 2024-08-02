@@ -5,47 +5,52 @@ from Liquirizia.Validator.Patterns import (
 	SetDefault,
 	IsAbleToNone,
 	IsNotToNone,
-	IsInteger
+	IsDateTime,
+	ToTypeOf,
 )
 
 from .Type import Type
 
+from datetime import datetime
+
 __all__ = (
-	'Integer'
+	'DateTime'
 )
 
 
-class Integer(Type):
+class DateTime(Type):
 	def __init__(
 			self, 
 			name: str, 
 			null: bool = False,
-			default: str = None,
-			autoincrement: bool = False,
-			primaryKey: bool = False,
-			primaryKeyDesc: bool = False,
 			reference: Type = None,
+			default: datetime = None,
 			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
 		):
+		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]
 		patterns = []
 		if default:
 			patterns.append(SetDefault(default))
 		if null:
-			patterns.append(IsAbleToNone())
+			patterns.append(IsAbleToNone(StrToDateTime(), IsDateTime(*vaps)))
 		else:
-			patterns.append(IsNotToNone())
-		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]
-		patterns.append(IsInteger(*vaps))
+			patterns.append(StrToDateTime())
+			patterns.append(IsDateTime(*vaps))
 		super().__init__(
 			key=name, 
-			type='INTEGER',
+			type='DATETIME',
 			null=null,
-			default=default,
-			autoincrement=autoincrement,
-			primaryKey=primaryKey,
-			primaryKeyDesc=primaryKeyDesc,
 			reference=reference,
+			default=default,
 			va=Validator(*patterns), 
 			fn=None
 		)
 		return
+
+
+class StrToDateTime(Pattern):
+	def __init__(self, fmt='%Y-%m-%d %H:%M:%S'):
+		self.fmt = fmt
+		return
+	def __call__(self, parameter):
+		return datetime.strptime(parameter, self.fmt)
