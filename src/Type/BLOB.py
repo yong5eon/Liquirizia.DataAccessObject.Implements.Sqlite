@@ -3,20 +3,17 @@
 from Liquirizia.Validator import Validator, Pattern
 from Liquirizia.Validator.Patterns import (
 	IsAbleToNone,
-	IsNotToNone,
-	SetDefault,
 	IsBytes,
-	IsByteStream,
 )
 
 from .Type import Type
 
 __all__ = (
-	'ByteStream'
+	'BLOB'
 )
 
 
-class ByteStream(Type):
+class BLOB(Type):
 	def __init__(
 			self, 
 			name: str, 
