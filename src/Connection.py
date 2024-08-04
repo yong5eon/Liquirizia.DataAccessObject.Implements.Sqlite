@@ -103,7 +103,7 @@ class Connection(BaseConnection, Database, Executable):
 		except Exception as e:
 			raise Error(str(e), error=e)
 	
-	def run(self, executor: Executor):
+	def run(self, executor: Executor, cb: callable = None):
 		try:
 			self.cursor.execute(executor.query, executor.args)
 			def transform(rows):
@@ -114,9 +114,7 @@ class Connection(BaseConnection, Database, Executable):
 			rows = transform(self.cursor.fetchall())
 			__ = []
 			for row in rows:
-				__.append(executor.model(**row))
-			if len(__) == 1:
-				return __[0]
+				__.append(cb(**row) if cb else row)
 			return __
 		except (DatabaseError, IntegrityError, ProgrammingError, NotSupportedError) as e:
 			raise ExecuteError(str(e), error=e, sql=executor.query, args=executor.args)
