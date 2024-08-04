@@ -4,8 +4,6 @@ from Liquirizia.Validator import Validator, Pattern
 from Liquirizia.Validator.Patterns import (
 	SetDefault,
 	IsAbleToNone,
-	IsNotToNone,
-	IsNotEmpty,
 	IsString
 )
 

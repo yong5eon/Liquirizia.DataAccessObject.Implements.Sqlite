@@ -46,3 +46,9 @@ class Type(Attribute):
 			self.referenceKey = reference.key
 		return
 	
+	def __str__(self):
+		return '{}.{}'.format(
+			self.model.__properties__['name'], # attribute's model name
+			self.key
+		)
+	

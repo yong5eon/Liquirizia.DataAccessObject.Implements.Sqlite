@@ -4,7 +4,6 @@ from Liquirizia.Validator import Validator, Pattern
 from Liquirizia.Validator.Patterns import (
 	SetDefault,
 	IsAbleToNone,
-	IsNotToNone,
 	IsFloat,
 )
 
@@ -26,15 +25,14 @@ class Float(Type):
 			reference: Type = None,
 			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
 		):
+		if not isinstance(vaps, (tuple, list)): vaps = [vaps]
 		patterns = []
 		if default:
 			patterns.append(SetDefault(default))
 		if null:
-			patterns.append(IsAbleToNone())
+			patterns.append(IsAbleToNone(IsFloat(*vaps)))
 		else:
-			patterns.append(IsNotToNone())
-		if not isinstance(vaps, (tuple, list)): vaps = [vaps]
-		patterns.append(IsFloat(*vaps))
+			patterns.append(IsFloat(*vaps))
 		super().__init__(
 			key=name, 
 			type='REAL',

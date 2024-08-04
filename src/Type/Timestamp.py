@@ -4,11 +4,12 @@ from Liquirizia.Validator import Validator, Pattern
 from Liquirizia.Validator.Patterns import (
 	SetDefault,
 	IsAbleToNone,
-	IsNotToNone,
 	IsInteger
 )
 
 from .Type import Type
+
+from datetime import datetime
 
 __all__ = (
 	'Timestamp'
