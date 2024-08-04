@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from Liquirizia.DataAccessObject.Model import Type 
-from Liquirizia.DataModel import (
-	Model,
-	Attribute,
-)
+from Liquirizia.DataModel import Model
+
+from ..Type import Type
 
 from ..Constraint import (
 	PrimaryKey,
@@ -48,7 +46,7 @@ class Table(Type):
 			o = object.__new__(cls)
 			o.__object__ = dict()
 			for k, v in cls.__dict__.items():
-				if isinstance(v, Attribute):
+				if isinstance(v, Type):
 					v.__init_object__(o, kwargs[v.key] if v.key in kwargs.keys() else None)
 			return o
 		obj.__new__ = __new__

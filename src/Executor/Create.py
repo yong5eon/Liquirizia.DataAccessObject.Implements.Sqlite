@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from Liquirizia.DataAccessObject.Model import Executors
-from Liquirizia.DataModel.Model import Model, Attribute
 
+from ..Model import Table
+from ..Type import Type
 from ..Constraint import PrimaryKey,ForeignKey
 from ..Index import Index, IndexUnique
 
@@ -14,12 +15,12 @@ __all__ = (
 
 
 class Create(Executors):
-	def __init__(self, o: type[Model], notexist: bool = False):
+	def __init__(self, o: type[Table], notexist: bool = False):
 		self.model = o
 		self.executors = []
 		_ = []
 		for k, v in o.__dict__.items():
-			if isinstance(v, Attribute):
+			if isinstance(v, Type):
 				_.append(self.toStringAttribute(v))
 		if o.__properties__['primaryKey']:
 			_.append(self.toStringPrimaryKey(o.__properties__['primaryKey']))
@@ -41,7 +42,7 @@ class Create(Executors):
 	def __iter__(self):
 		return self.executors.__iter__()
 
-	def toStringAttribute(self, attr: Attribute):
+	def toStringAttribute(self, attr: Type):
 		return '{} {}{}{}{}{}{}{}'.format(
 			attr.key,
 			attr.type,

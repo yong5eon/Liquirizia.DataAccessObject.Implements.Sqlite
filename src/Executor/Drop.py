@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from Liquirizia.DataAccessObject.Model import Executors
-from Liquirizia.DataModel.Model import Model, Attribute
+from ..Model import Table
 
 __all__ = (
 	'Drop'
@@ -9,7 +9,7 @@ __all__ = (
 
 
 class Drop(Executors):
-	def __init__(self, o: type[Model], exist: bool = True):
+	def __init__(self, o: type[Table], exist: bool = True):
 		self.executors = []
 		self.executors.append(('DROP TABLE {}{}'.format(
 			' IF EXISTS ' if exist else '',

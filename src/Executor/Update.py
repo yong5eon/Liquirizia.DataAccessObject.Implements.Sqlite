@@ -3,23 +3,29 @@
 from Liquirizia.DataAccessObject.Model import Executor
 
 from ..Model import Table
+from .Expr import Expr
 
 __all__ = (
-	'Insert'
+	'Update'
 )
 
 
-class Insert(Executor):
+class Update(Executor):
 	def __init__(self, o: type[Table]):
 		self.obj = o
 		self.table = o.__properties__['name']
 		self.kwargs = {}
+		self.cond = None
 		return
 	
-	def values(self, **kwargs):
+	def set(self, **kwargs):
 		for k, v in self.obj.__dict__.items():
 			if k not in kwargs.keys(): continue
 			self.kwargs[v.key] = v.validator(kwargs[k])
+		return self
+	
+	def where(self, *args: type[list[Expr]]):
+		self.conds = args
 		return self
 	
 	@property
@@ -28,10 +34,10 @@ class Insert(Executor):
 	
 	@property
 	def query(self):
-		return 'INSERT INTO {}({}) VALUES({}) RETURNING *'.format(
+		return 'UPDATE {} SET {}{} RETURNING *'.format(
 			self.table,
-			', '.join(self.kwargs.keys()),
-			', '.join(['?' for k in self.kwargs.keys()])
+			', '.join(['{}=?'.format(k) for k in self.kwargs.keys()]),
+			' WHERE {}'.format(' AND '.join([str(cond) for cond in self.conds])) if self.conds else '',
 		)
 
 	@property	
