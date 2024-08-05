@@ -78,15 +78,6 @@ class StudentOfClass(Model):
 	atCreated = DateTime(name='AT_CREATED', default='CURRENT_TIMESTAMP')
 	atUpdated = Timestamp(name='AT_UPDATED', null=True)
 
-for sql in Create(Student):
-	PrettyPrint(sql)
-
-for sql in Create(Class):
-	PrettyPrint(sql)
-
-for sql in Create(StudentOfClass):
-	PrettyPrint(sql)
-
 con = Connection(Configuration(
 	path='tmp/Sample.DB',  # File Path for SQLite Database File
 	autocommit=False
@@ -118,7 +109,10 @@ for _ in STUDENT:
 		cb=Student
 	)[0])
 
-PrettyPrint(students)
+for _ in students:
+	PrettyPrint(_)
+	_.atUpdated = int(round(datetime.now().timestamp()*1000))
+	PrettyPrint(_)
 
 students = con.run(Select(Student), cb=Student)
 PrettyPrint(students)
@@ -152,6 +146,8 @@ for _ in CLASS:
 	, cb=Class)[0])
 
 for _ in classes:
+	PrettyPrint(_)
+	_.atUpdated = int(round(datetime.now().timestamp()*1000))
 	PrettyPrint(_)
 
 classes = con.run(Select(Class), cb=Class)
@@ -195,7 +191,7 @@ PrettyPrint(studentsOfClasses)
 for _ in studentsOfClasses:
 	o = con.run(
 		Update(StudentOfClass).set(
-			score=(randrange(10, 45)/10),
+			score=randrange(10, 45)/10,
 			atUpdated=int(round(datetime.now().timestamp()*1000)),
 		).where(
 			IsEqualTo(StudentOfClass.studentId, _.studentId),
@@ -208,7 +204,16 @@ for _ in studentsOfClasses:
 studentsOfClasses = con.run(Select(StudentOfClass), cb=StudentOfClass)
 PrettyPrint(studentsOfClasses)
 
-exec = 	Select(StudentOfClass).join(
+for _ in studentsOfClasses:
+	PrettyPrint(_)
+	_.score = randrange(10, 45)/10
+	_.atUpdated = int(round(datetime.now().timestamp()*1000))
+	PrettyPrint(_)
+
+studentsOfClasses = con.run(Select(StudentOfClass), cb=StudentOfClass)
+PrettyPrint(studentsOfClasses)
+
+exec = Select(StudentOfClass).join(
 		LeftOuter(Student, IsEqualTo(StudentOfClass.studentId, Student.id)),
 		LeftOuter(Class, IsEqualTo(StudentOfClass.classId, Class.id)),
 	).values(
@@ -233,7 +238,7 @@ exec = 	Select(StudentOfClass).join(
 		Descend('AVG')
 	).limit(3, 1)
 
-PrettyPrintSQL(exec.query)
-PrettyPrint(con.run(exec))
+# PrettyPrintSQL(exec.query)
+# PrettyPrint(con.run(exec))
 
 con.close()
