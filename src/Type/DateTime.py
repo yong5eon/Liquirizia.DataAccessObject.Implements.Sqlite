@@ -6,8 +6,11 @@ from Liquirizia.Validator.Patterns import (
 	IsAbleToNone,
 	IsDateTime,
 )
+from Liquirizia.DataModel import Handler
 
 from .Type import Type
+from ..Handler import Update
+
 
 from datetime import datetime
 
@@ -25,6 +28,7 @@ class DateTime(Type):
 			default: datetime = None,
 			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
 			fmt: str = '%Y-%m-%d %H:%M:%S',
+			fn: Handler = Update(),
 		):
 		class StrToDateTime(Pattern):
 			def __init__(self, fmt):
@@ -49,6 +53,6 @@ class DateTime(Type):
 			reference=reference,
 			default=default,
 			va=Validator(*patterns), 
-			fn=None
+			fn=fn,
 		)
 		return

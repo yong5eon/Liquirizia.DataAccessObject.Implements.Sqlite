@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from Liquirizia.DataModel import Attribute, Handler
-
 from Liquirizia.Validator.Validator import Validator
 
 from abc import abstractmethod

@@ -6,8 +6,10 @@ from Liquirizia.Validator.Patterns import (
 	IsAbleToNone,
 	IsInteger
 )
+from Liquirizia.DataModel import Handler
 
 from .Type import Type
+from ..Handler import Update
 
 from datetime import datetime
 
@@ -23,6 +25,7 @@ class Timestamp(Type):
 			null=False,
 			default=None,
 			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
+			fn: Handler = Update(),
 		):
 		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]
 		patterns = []
@@ -38,6 +41,6 @@ class Timestamp(Type):
 			null=null,
 			default=default,
 			va=Validator(*patterns), 
-			fn=None,
+			fn=fn,
 		)
 		return
