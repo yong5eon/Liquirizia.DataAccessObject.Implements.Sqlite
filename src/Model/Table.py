@@ -2,6 +2,7 @@
 
 from Liquirizia.DataModel import Model
 
+from ..Connection import Connection
 from ..Type import Type
 
 from ..Constraint import (
@@ -41,15 +42,13 @@ class Table(Type):
 			'foreignKeys': self.foreignKeys,
 			'indexes': self.indexes,
 		}
-
-		def __new__(cls, **kwargs):
+		def __new__(cls, con, **kwargs):
 			o = object.__new__(cls)
 			o.__object__ = dict()
+			o.__connection__ = con
 			for k, v in cls.__dict__.items():
 				if isinstance(v, Type):
 					v.__init_object__(o, kwargs[v.key] if v.key in kwargs.keys() else None)
 			return o
 		obj.__new__ = __new__
-
 		return obj
-

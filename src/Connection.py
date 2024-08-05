@@ -114,7 +114,7 @@ class Connection(BaseConnection, Database, Executable):
 			rows = transform(self.cursor.fetchall())
 			__ = []
 			for row in rows:
-				__.append(cb(**row) if cb else row)
+				__.append(cb(self, **row) if cb else row)
 			return __
 		except (DatabaseError, IntegrityError, ProgrammingError, NotSupportedError) as e:
 			raise ExecuteError(str(e), error=e, sql=executor.query, args=executor.args)
