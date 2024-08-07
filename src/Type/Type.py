@@ -24,9 +24,8 @@ class Type(Attribute):
 			autoincrement: bool = False,
 			reference: Type = None,
 			va: Validator = Validator(),
-			fn: Handler = None
 		):
-		super().__init__(va, fn)
+		super().__init__(va)
 		self.key = key
 		self.type = type
 		self.null = null

@@ -6,10 +6,8 @@ from Liquirizia.Validator.Patterns import (
 	IsAbleToNone,
 	IsFloat,
 )
-from Liquirizia.DataModel import Handler
 
 from .Type import Type
-from ..Handler import Update
 
 __all__ = (
 	'Float'
@@ -26,7 +24,6 @@ class Float(Type):
 			primaryKeyDesc: bool = False,
 			reference: Type = None,
 			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
-			fn: Handler = Update(),
 		):
 		if not isinstance(vaps, (tuple, list)): vaps = [vaps]
 		patterns = []
@@ -45,6 +42,5 @@ class Float(Type):
 			primaryKeyDesc=primaryKeyDesc,
 			reference=reference,
 			va=Validator(*patterns), 
-			fn=fn,
 		)
 		return
