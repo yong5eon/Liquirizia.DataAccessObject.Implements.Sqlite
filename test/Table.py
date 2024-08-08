@@ -213,8 +213,8 @@ for _ in studentsOfClasses:
 studentsOfClasses = con.run(Select(StudentOfClass), cb=StudentOfClass)
 PrettyPrint(studentsOfClasses)
 
-exec = Select(StudentOfClass).join(
-		LeftOuter(Student, IsEqualTo(StudentOfClass.studentId, Student.id)),
+exec = Select(Student).join(
+		LeftOuter(StudentOfClass, IsEqualTo(Student.id, StudentOfClass.studentId)),
 		LeftOuter(Class, IsEqualTo(StudentOfClass.classId, Class.id)),
 	).values(
 		Alias(Student.id, 'STUDENT_ID'),
@@ -228,17 +228,66 @@ exec = Select(StudentOfClass).join(
 		Alias(StudentOfClass.atCreated, 'STUDENT_OF_CLASS_AT_CREATED'),
 		Alias(StudentOfClass.atUpdated, 'STUDENT_OF_CLASS_AT_UPDATED'),
 	).where(
-		IsGreaterThan(StudentOfClass.score, 1)
+		IsEqualTo(Student.isDeleted, 'N')
 	).groupBy(
 		Student.id,
 	).having(
 		IsGreaterEqualTo('AVG', 3)
 	).orderBy(
+		Ascend(Student.id),
+		Descend('AVG'),
 		Ascend('SUM'),
-		Descend('AVG')
-	).limit(3, 1)
+	).limit(0, 10)
 
-# PrettyPrintSQL(exec.query)
-# PrettyPrint(con.run(exec))
+PrettyPrint(con.run(exec))
+
+@View(
+	name='STAT_STUDENT',
+	executor=Select(Student).join(
+		LeftOuter(StudentOfClass, IsEqualTo(Student.id, StudentOfClass.studentId)),
+		LeftOuter(Class, IsEqualTo(StudentOfClass.classId, Class.id)),
+	).where(
+		IsEqualTo(Student.isDeleted, 'N')
+	).groupBy(
+		Student.id
+	).values(
+		Student.id,
+		Student.name,
+		Count(Class.id, 'COUNT'),
+		Sum(StudentOfClass.score, 'SUM'),
+		Average(StudentOfClass.score, 'AVG'),
+		Student.atCreated,
+		Student.atUpdated,
+	).orderBy(
+		Ascend(Student.id)
+	)
+)
+class StatOfStudent(Model):
+	id = Integer(name='ID')
+	name = Text(name='NAME')
+	count = Integer(name='COUNT')
+	sum = Float(name='SUM')
+	average = Float(name='AVG')
+	atCreated = DateTime(name='AT_CREATED')
+	atUpdated = Timestamp(name='AT_UPDATED', null=True)
+
+con.runs(Create(StatOfStudent))
+
+statOfStudent = con.run(Select(StatOfStudent), StatOfStudent)
+PrettyPrint(statOfStudent)
+
+statOfStudent = con.run(
+	Select(StatOfStudent).where(
+		IsGreaterThan(StatOfStudent.average, 3)
+	), 
+	StatOfStudent
+)
+PrettyPrint(statOfStudent)
+
+# 
+# @View(
+# )
+# class StatOfClass(Model):
+# 	pass
 
 con.close()
