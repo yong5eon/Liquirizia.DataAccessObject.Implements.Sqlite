@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from Liquirizia.DataAccessObject import Connection as BaseConnection
-from Liquirizia.DataAccessObject.Properties.Database import Database
+from Liquirizia.DataAccessObject.Types import Database
 
 from Liquirizia.DataAccessObject import Error
 from Liquirizia.DataAccessObject.Errors import *
-from Liquirizia.DataAccessObject.Properties.Database.Errors import *
+from Liquirizia.DataAccessObject.Types.Database.Errors import *
 
 from Liquirizia.DataAccessObject.Model import (
 	Executors,
