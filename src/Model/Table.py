@@ -2,19 +2,18 @@
 
 from Liquirizia.DataModel import Model, Handler
 
+from .Type import Type as ModelType
+
 from ..Connection import Connection
 from ..Type import Type
-
 from ..Constraint import (
 	PrimaryKey,
 	ForeignKey,
 )
-
 from ..Index import (
 	Index,
 	IndexUnique,
 )
-
 from ..Handler import Update
 
 __all__ = (
@@ -22,7 +21,7 @@ __all__ = (
 )
 
 
-class Table(Type):
+class Table(object):
 	def __init__(
 		self, 
 		name: str, 
@@ -41,6 +40,7 @@ class Table(Type):
 	
 	def __call__(self, obj: Model):
 		obj.__properties__ = {
+			'type': ModelType.Table,
 			'name': self.name,
 			'primaryKey': self.primaryKey,
 			'foreignKeys': self.foreignKeys,
