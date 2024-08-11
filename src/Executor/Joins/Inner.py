@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .Join import Join
+from ..Join import Join
 
 from ..Expr import Expr
 from ...Model import Table

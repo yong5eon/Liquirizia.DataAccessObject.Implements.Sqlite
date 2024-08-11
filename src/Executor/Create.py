@@ -100,7 +100,6 @@ class ViewToSQL(object):
 			o.__properties__['executor'].query,
 		), ())]
 
-	
 
 class Create(Executors):
 
@@ -115,7 +114,7 @@ class Create(Executors):
 			ModelType.View  : Create.ViewToSQL,
 		}.get(o.__properties__['type'], None)
 		if fn:
-			self.executors = fn(o,  notexist)
+			self.executors = fn(o, notexist)
 		return
 	
 	def __iter__(self):

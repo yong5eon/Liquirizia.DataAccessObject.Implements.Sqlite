@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from .Alias import Alias
-
-from .Sum import Sum
-from .Count import Count
-from .Average import Average
+from .IsNull import IsNull
+from .IsNotNull import IsNotNull
 
 __all__ = (
 	'Alias',
-	'Sum',
-	'Count',
-	'Average',
+	'IsNull',
+	'IsNotNull',
 )

@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 
-from .Join import Join
+from ..Join import Join
 
 from ..Expr import Expr
 from ...Model import Table
 
 __all__ = (
-	'FullOuter'
+	'LeftOuter'
 )
 
 
-class FullOuter(Join):
-	"""Full Outer Join Class"""
+class LeftOuter(Join):
+	"""Left Outer Class"""
 
 	def __init__(self, table: Table, *args: type[list[Expr]]) -> None:
-		super(FullOuter, self).__init__('FULL OUTER', table, *args)
+		super(LeftOuter, self).__init__('LEFT OUTER', table, *args)
 		return

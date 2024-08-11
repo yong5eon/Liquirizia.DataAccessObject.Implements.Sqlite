@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from ..Expr import Expr
+from .Expr import Expr
 
-from ...Model import Table
+from ..Model import Table
 
 __all__ = (
 	'Join'

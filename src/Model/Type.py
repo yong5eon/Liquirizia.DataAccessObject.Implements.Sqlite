@@ -10,5 +10,4 @@ __all__ = (
 @unique
 class Type(Enum):
 	Table = auto()
-	VirtualTable = auto()
 	View  = auto()

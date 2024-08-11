@@ -14,12 +14,9 @@ from Liquirizia.DataAccessObject.Model import (
 )
 
 from .Configuration import Configuration
-from .Formatter import Formatter
 
 from sqlite3 import connect, Row
 from sqlite3 import DatabaseError, IntegrityError, ProgrammingError, OperationalError, NotSupportedError
-
-from collections.abc import Iterable
 
 __all__ = (
 	'DatabaseAccessObject'
@@ -92,30 +89,26 @@ class Connection(BaseConnection, Database, Executable):
 			raise Error(str(e), error=e)
 		return
 	
-	def runs(self, executors: Executors):
+	def run(self, executor: type[Executor|Executors], cb: callable = None):
 		try:
-			for query, args in executors:
-				self.cursor.execute(query, args)
-		except (DatabaseError, IntegrityError, ProgrammingError, NotSupportedError) as e:
-			raise ExecuteError(str(e), error=e, sql=query)
-		except OperationalError as e:
-			raise ConnectionClosedError(error=e)
-		except Exception as e:
-			raise Error(str(e), error=e)
-	
-	def run(self, executor: Executor, cb: callable = None):
-		try:
-			self.cursor.execute(executor.query, executor.args)
-			def transform(rows):
-				li = []  # the dictionary to be filled with the row data and to be returned
-				for i, row in enumerate(rows):  # iterate throw the sqlite3.Row objects
-					li.append(dict(row))
-				return li
-			rows = transform(self.cursor.fetchall())
-			__ = []
-			for row in rows:
-				__.append(cb(self, **row) if cb else row)
-			return __
+			def execs(execs: Executors):
+				for query, args in executor:
+					self.cursor.execute(query, args)
+				return
+			def exec(exec: Executor, cb: callable = None):
+				self.cursor.execute(executor.query, executor.args)
+				def transform(rows):
+					li = []  # the dictionary to be filled with the row data and to be returned
+					for i, row in enumerate(rows):  # iterate throw the sqlite3.Row objects
+						li.append(dict(row))
+					return li
+				rows = transform(self.cursor.fetchall())
+				__ = []
+				for row in rows:
+					__.append(cb(self, **row) if cb else row)
+				return __
+			if isinstance(executor, Executors): return execs(executor)
+			if isinstance(executor, Executor): return exec(executor, cb)
 		except (DatabaseError, IntegrityError, ProgrammingError, NotSupportedError) as e:
 			raise ExecuteError(str(e), error=e, sql=executor.query, args=executor.args)
 		except OperationalError as e:

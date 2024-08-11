@@ -7,6 +7,10 @@ from .Type import Type as ModelType
 
 from ..Connection import Connection
 from ..Type import Type
+from ..Index import (
+	Index,
+	IndexUnique,
+)
 
 __all__ = (
 	'View'
@@ -17,7 +21,7 @@ class View(object):
 	def __init__(
 		self, 
 		name: str, 
-		executor: Executor
+		executor: Executor,
 	):
 		self.name = name
 		self.executor = executor

@@ -2,7 +2,7 @@
 
 from Liquirizia.DataAccessObject import Helper, Error
 from Liquirizia.DataAccessObject.Errors import *
-from Liquirizia.DataAccessObject.Properties.Database.Errors import *
+from Liquirizia.DataAccessObject.Types.Database.Errors import *
 
 from Liquirizia.DataAccessObject.Implements.Sqlite import Configuration, Connection
 
@@ -45,9 +45,9 @@ if __name__ == '__main__':
 			)
 			'''
 			)
-		con.execute("INSERT INTO LOG(TEXT) VALUES('TEST1')")
-		con.execute("INSERT INTO LOG(TEXT) VALUES('TEST2')")
-		con.execute("INSERT INTO LOG(TEXT) VALUES('TEST3')")
+		con.execute("INSERT INTO LOG(TEXT) VALUES(?)", ('TEXT1'))
+		con.execute("INSERT INTO LOG(TEXT) VALUES(?)", ('TEXT2'))
+		con.execute("INSERT INTO LOG(TEXT) VALUES(?)", ('TEXT3'))
 
 		con.commit()
 		print('{} rows inserted'.format(con.affected()), file=sys.stdout)

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from Liquirizia.DataAccessObject.Model import Executors
-from ..Model import Table
+from Liquirizia.DataModel import Model
+from Liquirizia.DataAccessObject.Implements.Sqlite.Model import Type
 
 __all__ = (
 	'Drop'
@@ -9,12 +10,18 @@ __all__ = (
 
 
 class Drop(Executors):
-	def __init__(self, o: type[Table], exist: bool = True):
+	def __init__(self, o: type[Model], exist: bool = True):
 		self.executors = []
-		self.executors.append(('DROP TABLE {}{}'.format(
-			' IF EXISTS ' if exist else '',
-			o.__properties__['name'],
-		), ()))
+		if o.__properties__['type'] == Type.Table:
+			self.executors.append(('DROP TABLE {}{}'.format(
+				' IF EXISTS ' if exist else '',
+				o.__properties__['name'],
+			), ()))
+		if o.__properties__['type'] == Type.View:
+			self.executors.append(('DROP VIEW {}{}'.format(
+				' IF EXISTS ' if exist else '',
+				o.__properties__['name'],
+			), ()))
 		return
 	
 	def __iter__(self):

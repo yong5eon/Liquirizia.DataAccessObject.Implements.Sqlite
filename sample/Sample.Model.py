@@ -2,56 +2,61 @@
 
 from Liquirizia.DataAccessObject import Helper
 from Liquirizia.DataAccessObject.Errors import *
-from Liquirizia.DataAccessObject.Properties.Database.Errors import *
-
-from Liquirizia.DataAccessObject.Implements.Sqlite import Configuration, Connection
-from Liquirizia.DataAccessObject.Implements.Sqlite.Types import *
-from Liquirizia.DataAccessObject.Implements.Sqlite.Properties import *
-from Liquirizia.DataAccessObject.Implements.Sqlite.Executors import *
-
+from Liquirizia.DataAccessObject.Types.Database.Errors import *
+from Liquirizia.DataAccessObject.Implements.Sqlite import *
+from Liquirizia.DataAccessObject.Implements.Sqlite.Model import *
+from Liquirizia.DataAccessObject.Implements.Sqlite.Type import *
+from Liquirizia.DataAccessObject.Implements.Sqlite.Constraint import *
+from Liquirizia.DataAccessObject.Implements.Sqlite.Index import *
+from Liquirizia.DataAccessObject.Implements.Sqlite.Executor import *
+from Liquirizia.DataAccessObject.Implements.Sqlite.Executor.Filters import *
+from Liquirizia.DataAccessObject.Implements.Sqlite.Executor.Orders import *
+from Liquirizia.DataAccessObject.Implements.Sqlite.Executor.Joins import *
+from Liquirizia.DataAccessObject.Implements.Sqlite.Executor.Exprs import *
+from Liquirizia.DataAccessObject.Implements.Sqlite.Executor.Functions import *
 from Liquirizia.DataModel import Model
+from Liquirizia.Validator.Patterns import IsIn
+from Liquirizia.Util import *
 
-from sys import stdout, stderr
 from random import randrange
+from datetime import datetime
+
 
 # Tables
 @Table(
 	name = 'STUDENT',
-	primaryKey=PrimaryKey('ID'),
 	indexes=(
-		IndexUnique('IDX_UNIQUE_STUDENT_CODE', columns='CODE'),
-		Index(name='IDX_STUDENT_IS_DELETED', columns='IS_DELETED'),
-		Index(name='IDX_STUDENT_AT_CREATED', columns='AT_CREATED'),
-		Index(name='IDX_STUDENT_AT_UPDATED', columns='AT_UPDATED', null='LAST'),
+		IndexUnique('IDX_UNIQUE_STUDENT_CODE', colexprs='CODE'),
+		Index(name='IDX_STUDENT_IS_DELETED', colexprs='IS_DELETED'),
+		Index(name='IDX_STUDENT_AT_CREATED', colexprs='AT_CREATED DESC'),
+		Index(name='IDX_STUDENT_AT_UPDATED', colexprs='AT_UPDATED DESC'),
 	)
 )
 class Student(Model):
-	id = Integer('ID', autoincrement=True)
+	id = Integer('ID', primaryKey=True, autoincrement=True)
 	code = Text('CODE')
 	name = Text(name='NAME')
-	metadata = ByteStream(name='METADATA')
-	atCreated = DateTime(name='AT_CREATED', default='"NOW"')
+	metadata = BLOB(name='METADATA')
+	atCreated = DateTime(name='AT_CREATED', default='CURRENT_TIMESTAMP')
 	atUpdated = Timestamp(name='AT_UPDATED', null=True)
 	isDeleted = Text(name='IS_DELETED', default='"N"', vaps=IsIn('Y', 'N'))
 
 @Table(
 	name='CLASS',
-	primaryKey=PrimaryKey('ID'),
 	indexes=(
-		IndexUnique(name='IDX_CLASS_CODE', columns='CODE'),
-		Index(name='IDX_CLASS_IS_DELETED', columns='IS_DELETED'),
-		Index(name='IDX_CLASS_AT_CREATED', columns='AT_CREATED'),
-		Index(name='IDX_CLASS_AT_UPDATED', columns='AT_UPDATED'),
+		IndexUnique(name='IDX_CLASS_CODE', colexprs='CODE'),
+		Index(name='IDX_CLASS_IS_DELETED', colexprs='IS_DELETED'),
+		Index(name='IDX_CLASS_AT_CREATED', colexprs='AT_CREATED DESC'),
+		Index(name='IDX_CLASS_AT_UPDATED', colexprs='AT_UPDATED DESC'),
 	)
 )
 class Class(Model):
-	id = Integer(name='ID', autoincrement=True, primaryKey=True)
+	id = Integer(name='ID', primaryKey=True, autoincrement=True)
 	code = Text(name='CODE')
 	name = Text(name='NAME')
-	atCreated = DateTime(name='AT_CREATED', default='"NOW"')
+	atCreated = DateTime(name='AT_CREATED', default='CURRENT_TIMESTAMP')
 	atUpdated = Timestamp(name='AT_UPDATED', null=True)
 	isDeleted = Text(name='IS_DELETED', default='"N"', vaps=IsIn('Y', 'N'))
-
 
 @Table(
 	name='STUDENT_CLASS',
@@ -61,9 +66,9 @@ class Class(Model):
 		ForeignKey(columns='CLASS', table='CLASS', references='ID')
 	),
 	indexes=(
-		Index(name='IDX_STUDENT_CLASS_SCORE', columns='IS_DELETED'),
-		Index(name='IDX_STUDENT_CLASS_AT_CREATED', columns='AT_CREATED'),
-		Index(name='IDX_STUDENT_CLASS_AT_UPDATED', columns='AT_UPDATED'),
+		Index(name='IDX_STUDENT_CLASS_SCORE', colexprs='SCORE'),
+		Index(name='IDX_STUDENT_CLASS_AT_CREATED', colexprs='AT_CREATED DESC'),
+		Index(name='IDX_STUDENT_CLASS_AT_UPDATED', colexprs='AT_UPDATED DESC'),
 	)
 )
 class StudentOfClass(Model):
@@ -72,183 +77,276 @@ class StudentOfClass(Model):
 	classId = Integer(name='CLASS')
 	className = Text(name='CLASS_NAME', reference=Class.name)
 	score = Float(name='SCORE', null=True)
-	atCreated = DateTime(name='AT_CREATED', default='"NOW"')
+	atCreated = DateTime(name='AT_CREATED', default='CURRENT_TIMESTAMP')
 	atUpdated = Timestamp(name='AT_UPDATED', null=True)
 
 
 # View 
-
-# Model for Virtual Table
-class StudentsOfClass(Model(
-	Select(StudentOfClass).
-	joinInner(Student, IsEqual(StudentOfClass.studentId, Student.id)).
-	joinLeftOuter(Student, IsEqal(StudentOfClass.classId, Class.id)).
-	where(
-		IsNotNull(StudentOfClass.score)
+@View(
+	name='STAT_STUDENT',
+	executor=Select(Student).join(
+		LeftOuter(StudentOfClass, IsEqualTo(Student.id, StudentOfClass.studentId)),
+		LeftOuter(Class, IsEqualTo(StudentOfClass.classId, Class.id)),
+	).where(
+		IsEqualTo(Student.isDeleted, 'N')
+	).groupBy(
+		Student.id
+	).values(
+		Student.id,
+		Student.name,
+		Count(Class.id, 'COUNT'),
+		Sum(StudentOfClass.score, 'SUM'),
+		Average(StudentOfClass.score, 'AVG'),
+		Student.atCreated,
+		Student.atUpdated,
+	).orderBy(
+		Ascend(Student.id)
 	)
-)):
-	id = Integer(mapping=Student.id)
-	name = Text(mapping=Student.name)
-	atCreated = DateTime(mapping=Student.atCreated)
-	atUpdated = Timestamp(mapping=Student.atUpdated)
-	classId = Integer(mapping=Class.id)
-	className = Text(mapping=Class.name)
-	score = Real(mapping=StudentOfClass.score)
-	
+)
+class StatOfStudent(Model):
+	id = Integer(name='ID')
+	name = Text(name='NAME')
+	count = Integer(name='COUNT')
+	sum = Float(name='SUM', null=True)
+	average = Float(name='AVG', null=True)
+	atCreated = DateTime(name='AT_CREATED')
+	atUpdated = Timestamp(name='AT_UPDATED', null=True)
+
+
+@View(
+	name='STAT_CLASS',
+	executor=Select(Class).join(
+		LeftOuter(StudentOfClass, IsEqualTo(Class.id, StudentOfClass.classId)),
+		LeftOuter(Student), IsEqualTo(StudentOfClass.studentId, Student.id)
+	).where(
+		IsEqualTo(Class.isDeleted, 'N')
+	).groupBy(
+		Class.id
+	).values(
+		Class.id,
+		Class.name,
+		Count(Student.id, 'COUNT'),
+		Sum(StudentOfClass.score, 'SUM'),
+		Average(StudentOfClass.score, 'AVG'),
+		Class.atCreated,
+		Class.atUpdated,
+	).orderBy(
+		Ascend(Class.id)
+	)
+)
+class StatOfClass(Model):
+	id = Integer(name='ID')
+	name = Text(name='NAME')
+	count = Integer(name='COUNT')
+	sum = Float(name='SUM', null=True)
+	average = Float(name='AVG', null=True)
+	atCreated = DateTime(name='AT_CREATED')
+	atUpdated = Timestamp(name='AT_UPDATED', null=True)
+
 
 if __name__ == '__main__':
 
-	con = None
-
-	try:
-		# Set connection
-		Helper.Set(
-			'Sample',
-			Connection,
-			Configuration(
-				path='tmp/Sample.DB',  # File Path for SQLite Database File
-				autocommit=False
-			)
+	# Set connection
+	Helper.Set(
+		'Sample',
+		Connection,
+		Configuration(
+			path='tmp/Sample.DB',  # File Path for SQLite Database File
+			autocommit=False
 		)
+	)
 
-		# Get Connection
-		con = Helper.Get('Sample')
-		con.begin()
-		# create table
-		con.execute(Create(Student))
-		con.execute(Create(Class))
-		con.execute(Create(StudentOfClass))
-		# drop table
-		con.execute(Drop(StudentOfClass))
-		con.execute(Drop(Class))
-		con.execute(Drop(Student))
-		con.commit()
+	# Get Connection
+	con = Helper.Get('Sample')
+	con.begin()
+	
+	con.run(Drop(StudentOfClass))
+	con.run(Drop(Class))
+	con.run(Drop(Student))
+	con.run(Drop(StatOfStudent))
+	con.run(Drop(StatOfClass))
+	con.run(Create(Student))
+	con.run(Create(Class))
+	con.run(Create(StudentOfClass))
+	con.run(Create(StatOfStudent))
+	con.run(Create(StatOfClass))
 
-		STUDENT = [
-			['SU970001', 'Koo Hayoon', 'VERSION.txt'],
-			['SU970002', 'Ma Youngin', 'VERSION.txt'],
-			['SU970003', 'Kang Miran', 'VERSION.txt'],
-			['SU970004', 'Song Hahee', 'VERSION.txt'],
-		]
+	STUDENT = [
+		['SU970001', 'Koo Hayoon', 'VERSION'],
+		['SU970002', 'Ma Youngin', 'VERSION'],
+		['SU970003', 'Kang Miran', 'VERSION'],
+		['SU970004', 'Song Hahee', 'VERSION'],
+	]
 
-		CLASS = [
-			['CS000', 'Concept of Computer Science'],
-			['CS100', 'Concept of Programming Language'],
-			['CS101', 'C'],
-			['CS102', 'C++'],
-			['CS103', 'Java'],
-			['CS104', 'JavaScript'],
-			['CS105', 'Python'],
-			['CS105', 'Python'],
-			['CS120', 'Operating System'],
-			['CS130', 'Network'],
-			['CS131', 'TCP/IP'],
-			['CS132', 'HTTP'],
-			['CS140', 'Database'],
-			['CS141', 'Practice of RDBMS with MySQL'],
-			['CS142', 'Practice of RDBMS with PostgreSQL'],
-			['CS150', 'Distributed System'],
-		]
+	CLASS = [
+		['CS000', 'What is Computer Science'],
+		['CS100', 'Programming Language'],
+		['CS101', 'C'],
+		['CS102', 'C++'],
+		['CS103', 'Java'],
+		['CS104', 'JavaScript'],
+		['CS105', 'Python'],
+		['CS120', 'Operating System'],
+		['CS130', 'Network'],
+		['CS131', 'TCP/IP'],
+		['CS132', 'HTTP'],
+		['CS140', 'Database'],
+		['CS141', 'Practice of RDBMS with MySQL'],
+		['CS142', 'Practice of RDBMS with PostgreSQL'],
+		['CS150', 'Distributed System'],
+		['CS160', 'AI(Artificial Intelligence)'],
+	]
 
-		STUDENT_OF_CLASS = [
-			['SU970001', 'CS000'],
-			['SU970001', 'CS100'],
-			['SU970001', 'CS120'],
-			['SU970001', 'CS130'],
-			['SU970002', 'CS000'],
-			['SU970002', 'CS100'],
-			['SU970002', 'CS101'],
-			['SU970002', 'CS102'],
-			['SU970003', 'CS000'],
-			['SU970003', 'CS120'],
-			['SU970003', 'CS130'],
-			['SU970003', 'CS140'],
-			['SU970003', 'CS150'],
-			['SU970004', 'CS000'],
-			['SU970004', 'CS130'],
-			['SU970004', 'CS132'],
-			['SU970004', 'CS140'],
-			['SU970004', 'CS142'],
-			['SU970004', 'CS150'],
-		]
+	STUDENT_OF_CLASS = [
+		['SU970001', 'CS000'],
+		['SU970001', 'CS100'],
+		['SU970001', 'CS120'],
+		['SU970001', 'CS130'],
+		['SU970002', 'CS000'],
+		['SU970002', 'CS100'],
+		['SU970002', 'CS101'],
+		['SU970002', 'CS102'],
+		['SU970003', 'CS000'],
+		['SU970003', 'CS120'],
+		['SU970003', 'CS130'],
+		['SU970003', 'CS140'],
+		['SU970003', 'CS150'],
+		['SU970004', 'CS000'],
+		['SU970004', 'CS130'],
+		['SU970004', 'CS132'],
+		['SU970004', 'CS140'],
+		['SU970004', 'CS142'],
+		['SU970004', 'CS150'],
+	]
 
-		# with session
-		with Session(con) as s:
-			s.run(Create(Student))
-			s.run(Create(Class))
-			s.run(Create(StudentOfClass))
+	students = []
+	for _ in STUDENT:
+		students.append(con.run(
+			Insert(Student).values(
+				code=_[0],
+				name=_[1],
+				metadata=open(_[2], mode='rb').read(),
+			),
+			cb=Student
+		)[0])
+	
+	for _ in students:
+		PrettyPrint(_)
+		_.atUpdated = int(round(datetime.now().timestamp()*1000))
+		PrettyPrint(_)
+	
+	students = con.run(Select(Student), cb=Student)
+	PrettyPrint(students)
 
-			for _ in STUDENT:
-				s.run(
-					Insert(Student).value(
-						code=_[0],
-						name=_[1],
-						metadata=open(_[2]).read(),
-					)
-				)
-
-			for _ in CLASS:
-				s.run(
-					Insert(Student).value(
-						code=_[0],
-						name=_[1],
-					)
-				)
-
-			for _ in STUDENT_OF_CLASS:
-				s.run(
-					Insert(StudentOfClass).
-					value(
-						studentId=Select(Student).where(IsEqual(Student.code,_[0]).value(Student.id),
-						classId=Select(Class).where(IsEqual(Class.code,_[1]).value(Class.id),
-					)
-				)
-				s.run(
-					Update(StudentOfClass).
-					set(
-						score=randrange(0, 45)/10
-					).
-					where(
-						studentId=Select(Student).where(IsEqual(Student.code,_[0]).value(Student.id),
-						classId=Select(Class).where(IsEqual(Class.code,_[1]).value(Class.id),
-					)
-				)
-
-			# select with model
-			__ = s.sync(Student)
-			for _ in __:
-				print(_)
-			__ = s.sync(Class)
-			for _ in __:
-				print(_)
-			__ = s.sync(StudentsOfClass)
-			for _ in __:
-				print(_)
-
-			# select directly
-			__ = s.run(
-				Select(StudentOfClass).
-				join(
-					Class, Inner(StudentOfClass.classId, Class.id)
-				).
-				join(
-					Student, LeftOuter(StudentOfClass.studentId, Student.id)
-				).
-				where(
-					IsIn(Class.code, ('CS000'))
-				).
-				value(
-				)
+	classes = []
+	for _ in CLASS:
+		classes.append(con.run(
+			Insert(Class).values(
+				code=_[0],
+				name=_[1],
 			)
+		, cb=Class)[0])
+	
+	for _ in classes:
+		PrettyPrint(_)
+		_.atUpdated = int(round(datetime.now().timestamp()*1000))
+		PrettyPrint(_)
+	
+	classes = con.run(Select(Class), cb=Class)
+	PrettyPrint(classes)
+	
+	for scode, ccode in STUDENT_OF_CLASS:
+		s = con.run(Select(Student).where(IsEqualTo(Student.code, scode)), cb=Student)[0]
+		c = con.run(Select(Class).where(IsEqualTo(Class.code, ccode)), cb=Class)[0]
+		con.run(Insert(StudentOfClass).values(
+			studentId=s.id,
+			studentName=s.name,
+			classId=c.id,
+			className=c.name,
+		))
+	
+	studentsOfClasses = con.run(Select(StudentOfClass), cb=StudentOfClass)
+	PrettyPrint(studentsOfClasses)
+	
+	for _ in studentsOfClasses:
+		o = con.run(
+			Update(StudentOfClass).set(
+				score=randrange(10, 45)/10,
+				atUpdated=int(round(datetime.now().timestamp()*1000)),
+			).where(
+				IsEqualTo(StudentOfClass.studentId, _.studentId),
+				IsEqualTo(StudentOfClass.classId, _.classId),
+			),
+			cb=StudentOfClass
+		)
+		PrettyPrint(o[0])
+	
+	studentsOfClasses = con.run(Select(StudentOfClass), cb=StudentOfClass)
+	PrettyPrint(studentsOfClasses)
+	
+	for _ in studentsOfClasses:
+		PrettyPrint(_)
+		_.score = randrange(10, 45)/10
+		_.atUpdated = int(round(datetime.now().timestamp()*1000))
+		PrettyPrint(_)
+	
+	studentsOfClasses = con.run(Select(StudentOfClass), cb=StudentOfClass)
+	PrettyPrint(studentsOfClasses)
+	
+	exec = Select(Student).join(
+			LeftOuter(StudentOfClass, IsEqualTo(Student.id, StudentOfClass.studentId)),
+			LeftOuter(Class, IsEqualTo(StudentOfClass.classId, Class.id)),
+		).values(
+			Alias(Student.id, 'STUDENT_ID'),
+			Alias(Student.name, 'STUDENT_NAME'),
+			Alias(Class.id, 'CLASS_ID'),
+			Alias(Class.name, 'CLASS_NAME'),
+			Count(StudentOfClass.score, 'COUNT'),
+			Sum(StudentOfClass.score, 'SUM'),
+			Average(StudentOfClass.score, 'AVG'),
+			Alias(Student.atCreated, 'STUDENT_AT_CREATED'),
+			Alias(StudentOfClass.atCreated, 'STUDENT_OF_CLASS_AT_CREATED'),
+			Alias(StudentOfClass.atUpdated, 'STUDENT_OF_CLASS_AT_UPDATED'),
+		).where(
+			IsEqualTo(Student.isDeleted, 'N')
+		).groupBy(
+			Student.id,
+		).having(
+			IsGreaterEqualTo('AVG', 3)
+		).orderBy(
+			Ascend(Student.id),
+			Descend('AVG'),
+			Ascend('SUM'),
+		).limit(0, 10)
+	
+	PrettyPrint(con.run(exec))
 
-	except DataAccessObjectExecuteError as e:
-		con.rollback()
-		print(str(e), file=stderr)
-	except DataAccessObjectCommitError as e:
-		print(str(e), file=stderr)
-	except DataAccessObjectRollBackError as e:
-		print(str(e), file=stderr)
-	except DataAccessObjectConnectionError as e:
-		print(str(e), file=stderr)
-	except Exception as e:
-		print(str(e), file=stderr)
+	con.run(Delete(StudentOfClass).where(
+		IsEqualTo(StudentOfClass.studentName, 'Song Hahee')
+	))
+
+	PrettyPrint(con.run(exec))
+	
+	statOfStudent = con.run(Select(StatOfStudent), StatOfStudent)
+	PrettyPrint(statOfStudent)
+	
+	statOfStudent = con.run(
+		Select(StatOfStudent).where(
+			IsGreaterThan(StatOfStudent.average, 3)
+		), 
+		StatOfStudent
+	)
+	PrettyPrint(statOfStudent)
+	
+	statOfClass = con.run(Select(StatOfClass), StatOfClass)
+	PrettyPrint(StatOfClass)
+	
+	statOfClass = con.run(
+		Select(StatOfClass).where(
+			IsEqualTo(StatOfClass.count, 0)
+		), 
+		StatOfClass
+	)
+	PrettyPrint(statOfClass)
+
+	con.commit()

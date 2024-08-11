@@ -5,6 +5,7 @@ from .Drop import Drop
 from .Insert import Insert
 from .Select import Select
 from .Update import Update
+from .Delete import Delete
 
 from .Expr import Expr
 
@@ -14,5 +15,6 @@ __all__ = (
 	'Insert',
 	'Select',
 	'Update',
+	'Delete',
 	'Expr',
 )
