@@ -11,6 +11,7 @@ from Liquirizia.DataAccessObject.Model import (
 	Executors,
 	Executor,
 	Executable,
+	Fetchable,
 )
 
 from .Configuration import Configuration
@@ -89,26 +90,24 @@ class Connection(BaseConnection, Database, Executable):
 			raise Error(str(e), error=e)
 		return
 	
-	def run(self, executor: type[Executor|Executors], cb: callable = None):
+	def run(self, executor: type[Executor|Executors]):
+		cursor = None
 		try:
+			cursor = self.connection.cursor()
 			def execs(execs: Executors):
-				for query, args in executor:
-					self.cursor.execute(query, args)
-				return
-			def exec(exec: Executor, cb: callable = None):
-				self.cursor.execute(executor.query, executor.args)
-				def transform(rows):
-					li = []  # the dictionary to be filled with the row data and to be returned
-					for i, row in enumerate(rows):  # iterate throw the sqlite3.Row objects
-						li.append(dict(row))
-					return li
-				rows = transform(self.cursor.fetchall())
 				__ = []
-				for row in rows:
-					__.append(cb(self, **row) if cb else row)
+				for query, args in executor:
+					cursor.execute(query, args)
+					if not isinstance(executor, Fetchable): continue
+					rows = executor.fetch(self, cursor.fetchall())
+					__.extend(rows)
 				return __
+			def exec(exec: Executor, cb: callable = None):
+				cursor.execute(executor.query, executor.args)
+				if not isinstance(exec, Fetchable): return
+				return exec.fetch(self, cursor.fetchall())
 			if isinstance(executor, Executors): return execs(executor)
-			if isinstance(executor, Executor): return exec(executor, cb)
+			if isinstance(executor, Executor): return exec(executor)
 		except (DatabaseError, IntegrityError, ProgrammingError, NotSupportedError) as e:
 			raise ExecuteError(str(e), error=e, sql=executor.query, args=executor.args)
 		except OperationalError as e:

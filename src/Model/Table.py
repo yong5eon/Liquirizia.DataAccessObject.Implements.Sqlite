@@ -46,10 +46,9 @@ class Table(object):
 			'foreignKeys': self.foreignKeys,
 			'indexes': self.indexes,
 		}
-		def __new__(cls, con: Connection, **kwargs):
+		def __new__(cls, **kwargs):
 			o = object.__new__(cls)
 			o.__object__ = dict()
-			o.__connection__ = con
 			for k, v in cls.__dict__.items():
 				if isinstance(v, Type):
 					v.__init_object__(o, kwargs[v.key] if v.key in kwargs.keys() else None)

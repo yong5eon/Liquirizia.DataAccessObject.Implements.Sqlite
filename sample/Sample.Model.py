@@ -158,6 +158,7 @@ if __name__ == '__main__':
 
 	# Get Connection
 	con = Helper.Get('Sample')
+
 	con.begin()
 	
 	con.run(Drop(StudentOfClass))
@@ -226,16 +227,15 @@ if __name__ == '__main__':
 				code=_[0],
 				name=_[1],
 				metadata=open(_[2], mode='rb').read(),
-			),
-			cb=Student
-		)[0])
+			)
+		))
 	
 	for _ in students:
 		PrettyPrint(_)
 		_.atUpdated = int(round(datetime.now().timestamp()*1000))
 		PrettyPrint(_)
 	
-	students = con.run(Select(Student), cb=Student)
+	students = con.run(Select(Student))
 	PrettyPrint(students)
 
 	classes = []
@@ -245,19 +245,19 @@ if __name__ == '__main__':
 				code=_[0],
 				name=_[1],
 			)
-		, cb=Class)[0])
+		))
 	
 	for _ in classes:
 		PrettyPrint(_)
 		_.atUpdated = int(round(datetime.now().timestamp()*1000))
 		PrettyPrint(_)
 	
-	classes = con.run(Select(Class), cb=Class)
+	classes = con.run(Select(Class))
 	PrettyPrint(classes)
 	
 	for scode, ccode in STUDENT_OF_CLASS:
-		s = con.run(Select(Student).where(IsEqualTo(Student.code, scode)), cb=Student)[0]
-		c = con.run(Select(Class).where(IsEqualTo(Class.code, ccode)), cb=Class)[0]
+		s = con.run(Select(Student).where(IsEqualTo(Student.code, scode)))[0]
+		c = con.run(Select(Class).where(IsEqualTo(Class.code, ccode)))[0]
 		con.run(Insert(StudentOfClass).values(
 			studentId=s.id,
 			studentName=s.name,
@@ -265,7 +265,7 @@ if __name__ == '__main__':
 			className=c.name,
 		))
 	
-	studentsOfClasses = con.run(Select(StudentOfClass), cb=StudentOfClass)
+	studentsOfClasses = con.run(Select(StudentOfClass))
 	PrettyPrint(studentsOfClasses)
 	
 	for _ in studentsOfClasses:
@@ -276,12 +276,11 @@ if __name__ == '__main__':
 			).where(
 				IsEqualTo(StudentOfClass.studentId, _.studentId),
 				IsEqualTo(StudentOfClass.classId, _.classId),
-			),
-			cb=StudentOfClass
+			)
 		)
-		PrettyPrint(o[0])
+		PrettyPrint(o)
 	
-	studentsOfClasses = con.run(Select(StudentOfClass), cb=StudentOfClass)
+	studentsOfClasses = con.run(Select(StudentOfClass))
 	PrettyPrint(studentsOfClasses)
 	
 	for _ in studentsOfClasses:
@@ -290,7 +289,7 @@ if __name__ == '__main__':
 		_.atUpdated = int(round(datetime.now().timestamp()*1000))
 		PrettyPrint(_)
 	
-	studentsOfClasses = con.run(Select(StudentOfClass), cb=StudentOfClass)
+	studentsOfClasses = con.run(Select(StudentOfClass))
 	PrettyPrint(studentsOfClasses)
 	
 	exec = Select(Student).join(
@@ -327,25 +326,23 @@ if __name__ == '__main__':
 
 	PrettyPrint(con.run(exec))
 	
-	statOfStudent = con.run(Select(StatOfStudent), StatOfStudent)
+	statOfStudent = con.run(Select(StatOfStudent))
 	PrettyPrint(statOfStudent)
 	
 	statOfStudent = con.run(
 		Select(StatOfStudent).where(
 			IsGreaterThan(StatOfStudent.average, 3)
-		), 
-		StatOfStudent
+		)
 	)
 	PrettyPrint(statOfStudent)
 	
-	statOfClass = con.run(Select(StatOfClass), StatOfClass)
+	statOfClass = con.run(Select(StatOfClass))
 	PrettyPrint(StatOfClass)
 	
 	statOfClass = con.run(
 		Select(StatOfClass).where(
 			IsEqualTo(StatOfClass.count, 0)
-		), 
-		StatOfClass
+		)
 	)
 	PrettyPrint(statOfClass)
 

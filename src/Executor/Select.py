@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from Liquirizia.DataAccessObject.Model import Executor
+from Liquirizia.DataAccessObject.Model import Executor, Fetchable
 
 from ..Model import Table
 from ..Type import Type
@@ -11,7 +11,7 @@ __all__ = (
 )
 
 
-class Select(Executor):
+class Select(Executor, Fetchable):
 	def __init__(self, o: type[Table]):
 		self.obj = o
 		self.table = o.__properties__['name']
@@ -89,4 +89,15 @@ class Select(Executor):
 	@property	
 	def args(self):
 		return list(self.kwargs.values())
-	
+
+	def fetch(self, con, rows):
+		_ = []
+		if self.joins or self.grps or self.vals:
+			for i, row in enumerate(rows):
+				_.append(dict(row))
+		else:
+			for i, row in enumerate(rows):
+				obj = self.obj(**dict(row))
+				obj.__connection__ = con
+				_.append(obj)
+		return _
