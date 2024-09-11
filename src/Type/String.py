@@ -1,51 +1,44 @@
 # -*- coding: utf-8 -*-
 
+from Liquirizia.DataModel import Handler
+
 from Liquirizia.Validator import Validator, Pattern
 from Liquirizia.Validator.Patterns import (
 	SetDefault,
-	IsAbleToNone,
-	IsInteger
+	IsToNone,
+	IsString
 )
 
-from .Type import Type
+from .Object import Object
 
 __all__ = (
-	'Integer'
+	'Text'
 )
 
 
-class Integer(Type):
+class Text(Object):
 	def __init__(
 			self, 
 			name: str, 
 			null: bool = False,
 			default: str = None,
-			autoincrement: bool = False,
-			primaryKey: bool = False,
-			primaryKeyDesc: bool = False,
-			reference: Type = None,
 			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
+			fn: Handler = None
 		):
 		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]
 		patterns = []
 		if default:
 			patterns.append(SetDefault(default))
 		if null:
-			patterns.append(IsAbleToNone(IsInteger(*vaps)))
+			patterns.append(IsToNone(IsString(*vaps)))
 		else:
-			if autoincrement:
-				patterns.append(IsAbleToNone(IsInteger(*vaps)))
-			else:
-				patterns.append(IsInteger(*vaps))
+			patterns.append(IsString(*vaps))
 		super().__init__(
 			key=name, 
-			type='INTEGER',
+			type='TEXT',
 			null=null,
 			default=default,
-			autoincrement=autoincrement,
-			primaryKey=primaryKey,
-			primaryKeyDesc=primaryKeyDesc,
-			reference=reference,
-			va=Validator(*patterns), 
+			va=Validator(*patterns),
+			fn=fn,
 		)
 		return

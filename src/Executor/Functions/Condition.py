@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from ..Expr import Expr
-from ...Type import Type
+from ...Type import Object
 
 __all__ = (
 	'IfNull'
@@ -9,7 +9,7 @@ __all__ = (
 
 
 class IfNull(Expr):
-	def __init__(self, attr: Type, value: any):
+	def __init__(self, attr: Object, value: any):
 		self.attr = attr
 		self.value = value
 		return

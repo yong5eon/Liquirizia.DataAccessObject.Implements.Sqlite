@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
 
-from Liquirizia.DataAccessObject.Model import Executor
+from Liquirizia.DataModel import Model
+from Liquirizia.DataAccessObject.Model import Executor, Fetch
 
 from ..Model import Table
-from ..Type import Type
+from ..Type import Object
 from .Expr import Expr
+
+from ..Cursor import Cursor
 
 __all__ = (
 	'Select'
 )
 
 
-class Select(Executor):
+class Select(Executor, Fetch):
 	def __init__(self, o: type[Table]):
 		self.obj = o
 		self.table = o.__properties__['name']
@@ -24,6 +27,7 @@ class Select(Executor):
 		self.vals = None
 		self.offset = None
 		self.size = None
+		self.toObj = None
 		return
 
 	def join(self, *args):
@@ -55,6 +59,10 @@ class Select(Executor):
 		self.vals = args
 		return self
 	
+	def to(self, o: type[Model]):
+		self.toObj = o
+		return self
+	
 	@property
 	def model(self):
 		return self.obj
@@ -64,11 +72,11 @@ class Select(Executor):
 		args = []
 		if not self.vals:
 			for k, v in self.obj.__dict__.items():
-				if isinstance(v, Type):
+				if isinstance(v, Object):
 					args.append('{}.{}'.format(self.table, v.key))
 		else:
 			for v in self.vals:
-				if isinstance(v, Type):
+				if isinstance(v, Object):
 					args.append('{}.{}'.format(v.model.__properties__['name'], v.key))
 					continue
 				if isinstance(v, Expr):
@@ -89,4 +97,14 @@ class Select(Executor):
 	@property	
 	def args(self):
 		return list(self.kwargs.values())
-	
+
+	def fetch(self, cursor: Cursor):
+		_ = []
+		for i, row in enumerate(cursor.rows()):
+			if self.toObj:
+				obj = self.toObj(**dict(row))
+				obj.__cursor__ = cursor
+				_.append(obj)
+			else:
+				_.append(row)
+		return _ if len(_) else None

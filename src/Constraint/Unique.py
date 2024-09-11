@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
+from .Constraint import Constraint
+
 __all__ = (
-	'IndexUnique'
+	'Unique'
 )
 
 
-class IndexUnique(object):
+class Unique(Constraint):
 	def __init__(
 		self, 
 		name: str,

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from Liquirizia.DataAccessObject.Model import Executor
+from Liquirizia.DataAccessObject.Model import Executor, Fetch
 
 from ..Model import Table
 
@@ -9,7 +9,7 @@ __all__ = (
 )
 
 
-class Insert(Executor):
+class Insert(Executor, Fetch):
 	def __init__(self, o: type[Table]):
 		self.obj = o
 		self.table = o.__properties__['name']
@@ -37,4 +37,8 @@ class Insert(Executor):
 	@property	
 	def args(self):
 		return list(self.kwargs.values())
-	
+
+	def fetch(self, cursor):
+		obj = self.obj(**dict(cursor.row()))
+		obj.__cursor__ = cursor
+		return obj

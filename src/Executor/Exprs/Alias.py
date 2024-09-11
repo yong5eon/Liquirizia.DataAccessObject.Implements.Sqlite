@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from ..Expr import Expr
-from ...Type import Type
+from ...Type import Object
 
 __all__ = (
 	'Alias'
@@ -9,7 +9,7 @@ __all__ = (
 
 
 class Alias(Expr):
-	def __init__(self, attr: Type, name: str):
+	def __init__(self, attr: Object, name: str):
 		self.attr = attr
 		self.name = name
 		return

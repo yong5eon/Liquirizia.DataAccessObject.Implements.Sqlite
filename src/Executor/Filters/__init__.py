@@ -1,14 +1,25 @@
 # -*- coding: utf-8 -*-
 
-from .IsEqualTo import IsEqualTo
-from .IsNotEqualTo import IsNotEqualTo
-from .IsLike import IsLike
-from .IsGreaterThan import IsGreaterThan
-from .IsGreaterEqualTo import IsGreaterEqualTo
-from .IsLessThan import IsLessThan
-from .IsLessEqualTo import IsLessEqualTo
+from .Operator import (
+	And,
+	Or,
+)
+from .Compare import (
+	IsEqualTo,
+	IsNotEqualTo,
+	IsGreaterThan,
+	IsGreaterEqualTo,
+	IsLessThan,
+	IsLessEqualTo,
+)
+from .String import (
+	IsLike,
+)
+
 
 __all__ = (
+	'And',
+	'Or',
 	'IsEqualTo',
 	'IsNotEqualTo',
 	'IsLike',

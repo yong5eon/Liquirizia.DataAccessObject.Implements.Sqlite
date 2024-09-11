@@ -1,90 +1,45 @@
 # -*- coding: utf-8 -*-
 
-from Liquirizia.DataAccessObject import Connection as BaseConnection
-from Liquirizia.DataAccessObject.Properties.Database import Database
+from Liquirizia.DataAccessObject.Properties.Database import Session as BaseSession
+from Liquirizia.DataAccessObject.Model import (
+    Run,
+    Fetch,
+    Executor,
+    Executors,
+)
 
 from Liquirizia.DataAccessObject import Error
 from Liquirizia.DataAccessObject.Errors import *
 from Liquirizia.DataAccessObject.Properties.Database.Errors import *
 
-from Liquirizia.DataAccessObject.Model import (
-	Executors,
-	Executor,
-	Run,
-	Fetch,
-)
-
-from .Configuration import Configuration
 from .Context import Context
 from .Cursor import Cursor
-from .Session import Session
 
-from sqlite3 import connect, Row
+from sqlite3 import Connection as SqliteConnection
 from sqlite3 import DatabaseError, IntegrityError, ProgrammingError, OperationalError, NotSupportedError
 
 __all__ = (
-	'DatabaseAccessObject'
+	'Session'
 )
 
 
-class Connection(BaseConnection, Database, Run):
-	"""Connection Class for Sqlite"""
+class Session(BaseSession, Run):
+	"""Session Interface for Database"""
 
-	def __init__(self, conf: Configuration):
-		self.conf = conf
-		self.connection = None
+	def __init__(self, connection: SqliteConnection) -> None:
+		self.connnection = connection
+		self.cursor = self.connnection.cursor()
 		return
-
-	def __del__(self):
-		if not self.connection:
-			return
-		self.close()
+	
+	def __del__(self) -> None:
+		self.cursor.close()
+		self.connnection.commit()
 		return
-
-	def connect(self):
-		try:
-			self.connection = connect(
-				self.conf.path,
-				isolation_level=None if self.conf.autocommit else 'DEFERRED',
-				check_same_thread=False,
-			)
-			self.connection.row_factory = Row
-		except (DatabaseError) as e:
-			raise ConnectionError(error=e)
-		except Exception as e:
-			raise Error(str(e), error=e)
-		return
-
-	def close(self):
-		try:
-			if self.conf.autocommit:
-				self.commit()
-
-			if not self.cursor:
-				self.cursor.close()
-				del self.cursor
-				self.cursor = None
-
-			if not self.connection:
-				self.connection.close()
-				del self.connection
-				self.connection = None
-		except (DatabaseError, IntegrityError, ProgrammingError, NotSupportedError) as e:
-			raise ExecuteError(error=e)
-		except OperationalError as e:
-			raise ConnectionClosedError(error=e)
-		except Exception as e:
-			raise Error(str(e), error=e)
-		return
-
-	def begin(self):
-		pass
-
+	
 	def execute(self, sql, *args):
 		try:
-			cursor = self.connection.cursor()
-			cursor.execute(sql, args)
-			return Context(cursor)
+			self.cursor.execute(sql, args)
+			return Context(self.cursor)
 		except (DatabaseError, IntegrityError, ProgrammingError, NotSupportedError) as e:
 			raise ExecuteError(str(e), error=e)
 		except OperationalError as e:
@@ -95,9 +50,8 @@ class Connection(BaseConnection, Database, Run):
 	
 	def executes(self, sql, *args):
 		try:
-			cursor = self.connection.cursor()
-			cursor.executemany(sql, args)
-			return Context(cursor)
+			self.cursor.executemany(sql, args)
+			return Context(self.cursor)
 		except (DatabaseError, IntegrityError, ProgrammingError, NotSupportedError) as e:
 			raise ExecuteError(str(e), error=e)
 		except OperationalError as e:
@@ -117,7 +71,7 @@ class Connection(BaseConnection, Database, Run):
 					rows = executor.fetch(Cursor(cursor))
 					__.extend(rows)
 				return __
-			def exec(exec: Executor):
+			def exec(exec: Executor, cb: callable = None):
 				cursor.execute(executor.query, executor.args)
 				if not isinstance(exec, Fetch): return
 				return exec.fetch(Cursor(cursor))
@@ -130,30 +84,30 @@ class Connection(BaseConnection, Database, Run):
 		except Exception as e:
 			raise Error(str(e), error=e)
 		
-	def cursor(self) -> Cursor:
-		return Cursor(self.connection.cursor())
-		
-	def session(self) -> Session:
-		return Session(self.connection)
-
-	def commit(self):
+	def rows(self):
+		def transform(rows):
+			li = []  # the dictionary to be filled with the row data and to be returned
+			for i, row in enumerate(rows):  # iterate throw the sqlite3.Row objects
+				li.append(dict(row))
+			return li
 		try:
-			self.connection.commit()
+			return transform(self.cursor.fetchall())
 		except (DatabaseError, IntegrityError, ProgrammingError, NotSupportedError) as e:
-			raise CommitError(error=e)
+			raise CursorError(error=e)
 		except OperationalError as e:
 			raise ConnectionClosedError(error=e)
 		except Exception as e:
 			raise Error(str(e), error=e)
-		return
 
-	def rollback(self):
+	def row(self):
 		try:
-			self.connection.rollback()
+			return dict(self.cursor.fetchone())
 		except (DatabaseError, IntegrityError, ProgrammingError, NotSupportedError) as e:
-			raise RollBackError(error=e)
+			raise CursorError(error=e)
 		except OperationalError as e:
 			raise ConnectionClosedError(error=e)
 		except Exception as e:
 			raise Error(str(e), error=e)
-		return
+	
+	def count(self):
+		raise NotSupportedError('Sqlite is not support row count')

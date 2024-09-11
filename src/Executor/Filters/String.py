@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from ..Expr import Expr
-from ...Type import Type
+from ...Type import Object
 from ...Encoder import Encoder
 
 __all__ = (
@@ -12,7 +12,7 @@ __all__ = (
 class IsLike(Expr):
 	"""Is Like Filter Class"""
 
-	def __init__(self, attr: Type, other) -> None:
+	def __init__(self, attr: Object, other) -> None:
 		self.attr = attr
 		self.other = other
 		self.encoder = Encoder()

@@ -8,9 +8,9 @@ __all__ = (
 
 
 class ForeignKey(Constraint):
-	def __init__(self, columns, table, references):
-		self.columns = columns if isinstance(columns, (tuple, list)) else [columns]
-		self.table = table
-		self.references = columns if isinstance(references, (tuple, list)) else [references]
+	def __init__(self, cols, reference, referenceCols):
+		self.cols = cols if isinstance(cols, (tuple, list)) else [cols]
+		self.reference = reference
+		self.referenceCols = referenceCols if isinstance(referenceCols, (tuple, list)) else [referenceCols]
 		return
 	

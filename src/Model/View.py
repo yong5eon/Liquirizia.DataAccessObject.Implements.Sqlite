@@ -3,14 +3,9 @@
 from Liquirizia.DataModel import Model
 from Liquirizia.DataAccessObject.Model import Executor
 
-from .Type import Type as ModelType
+from .Type import Type
 
-from ..Connection import Connection
-from ..Type import Type
-from ..Index import (
-	Index,
-	IndexUnique,
-)
+from ..Type import Object
 
 __all__ = (
 	'View'
@@ -29,17 +24,16 @@ class View(object):
 	
 	def __call__(self, obj: Model):
 		obj.__properties__ = {
-			'type': ModelType.View,
+			'type': Type.View,
 			'name': self.name,
 			'executor': self.executor,
 		}
-		def __new__(cls, con: Connection, **kwargs):
+		def __new__(cls, **kwargs):
 			o = object.__new__(cls)
 			o.__object__ = dict()
-			o.__connection__ = con
 			for k, v in cls.__dict__.items():
-				if isinstance(v, Type):
-					v.__init_object__(o, kwargs[v.key] if v.key in kwargs.keys() else None)
+				if not isinstance(v, Object): continue
+				v.__init_object__(o, kwargs[v.key] if v.key in kwargs.keys() else None)
 			return o
 		obj.__new__ = __new__
 		return obj
