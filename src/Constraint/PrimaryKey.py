@@ -8,7 +8,8 @@ __all__ = (
 
 
 class PrimaryKey(Constraint):
-	def __init__(self, columns):
-		self.columns = columns if isinstance(columns, (tuple, list)) else [columns]
+	def __init__(self, cols, autoincrement=False):
+		self.cols = cols if isinstance(cols, (tuple, list)) else [cols]
+		self.autoincrement = autoincrement
 		return
 	

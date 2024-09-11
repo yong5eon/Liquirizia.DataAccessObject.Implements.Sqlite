@@ -2,18 +2,18 @@
 
 from Liquirizia.DataAccessObject import Helper
 from Liquirizia.DataAccessObject.Errors import *
-from Liquirizia.DataAccessObject.Types.Database.Errors import *
+from Liquirizia.DataAccessObject.Properties.Database.Errors import *
 from Liquirizia.DataAccessObject.Implements.Sqlite import *
 from Liquirizia.DataAccessObject.Implements.Sqlite.Model import *
 from Liquirizia.DataAccessObject.Implements.Sqlite.Type import *
 from Liquirizia.DataAccessObject.Implements.Sqlite.Constraint import *
-from Liquirizia.DataAccessObject.Implements.Sqlite.Index import *
 from Liquirizia.DataAccessObject.Implements.Sqlite.Executor import *
 from Liquirizia.DataAccessObject.Implements.Sqlite.Executor.Filters import *
 from Liquirizia.DataAccessObject.Implements.Sqlite.Executor.Orders import *
 from Liquirizia.DataAccessObject.Implements.Sqlite.Executor.Joins import *
 from Liquirizia.DataAccessObject.Implements.Sqlite.Executor.Exprs import *
 from Liquirizia.DataAccessObject.Implements.Sqlite.Executor.Functions import *
+from Liquirizia.DataAccessObject.Implements.Sqlite.Handler import *
 from Liquirizia.DataModel import Model
 from Liquirizia.Validator.Patterns import IsIn
 from Liquirizia.Util import *
@@ -25,15 +25,19 @@ from datetime import datetime
 # Tables
 @Table(
 	name = 'STUDENT',
+	constraints=(
+		PrimaryKey('ID', autoincrement=True),
+		Unique('IDX_UNIQUE_STUDENT_CODE', colexprs='CODE'),
+	),
 	indexes=(
-		IndexUnique('IDX_UNIQUE_STUDENT_CODE', colexprs='CODE'),
 		Index(name='IDX_STUDENT_IS_DELETED', colexprs='IS_DELETED'),
 		Index(name='IDX_STUDENT_AT_CREATED', colexprs='AT_CREATED DESC'),
 		Index(name='IDX_STUDENT_AT_UPDATED', colexprs='AT_UPDATED DESC'),
-	)
+	),
+	fn=Updater()
 )
 class Student(Model):
-	id = Integer('ID', primaryKey=True, autoincrement=True)
+	id = Integer('ID')
 	code = Text('CODE')
 	name = Text(name='NAME')
 	metadata = BLOB(name='METADATA')
@@ -43,15 +47,18 @@ class Student(Model):
 
 @Table(
 	name='CLASS',
+	constraints=(
+		PrimaryKey('ID', autoincrement=True),
+		Unique(name='IDX_CLASS_CODE', colexprs='CODE'),
+	),
 	indexes=(
-		IndexUnique(name='IDX_CLASS_CODE', colexprs='CODE'),
 		Index(name='IDX_CLASS_IS_DELETED', colexprs='IS_DELETED'),
 		Index(name='IDX_CLASS_AT_CREATED', colexprs='AT_CREATED DESC'),
 		Index(name='IDX_CLASS_AT_UPDATED', colexprs='AT_UPDATED DESC'),
 	)
 )
 class Class(Model):
-	id = Integer(name='ID', primaryKey=True, autoincrement=True)
+	id = Integer(name='ID')
 	code = Text(name='CODE')
 	name = Text(name='NAME')
 	atCreated = DateTime(name='AT_CREATED', default='CURRENT_TIMESTAMP')
@@ -60,10 +67,10 @@ class Class(Model):
 
 @Table(
 	name='STUDENT_CLASS',
-	primaryKey=PrimaryKey(('STUDENT', 'CLASS')),
-	foreignKeys=(
-		ForeignKey(columns='STUDENT', table='STUDENT', references='ID'),
-		ForeignKey(columns='CLASS', table='CLASS', references='ID')
+	constraints=(
+		PrimaryKey(('STUDENT', 'CLASS')),
+		ForeignKey(cols='STUDENT', reference='STUDENT', referenceCols='ID'),
+		ForeignKey(cols='CLASS', reference='CLASS', referenceCols='ID')
 	),
 	indexes=(
 		Index(name='IDX_STUDENT_CLASS_SCORE', colexprs='SCORE'),
@@ -73,9 +80,9 @@ class Class(Model):
 )
 class StudentOfClass(Model):
 	studentId = Integer(name='STUDENT')
-	studentName = Text(name='STUDENT_NAME', reference=Student.name)
+	studentName = Text(name='STUDENT_NAME')
 	classId = Integer(name='CLASS')
-	className = Text(name='CLASS_NAME', reference=Class.name)
+	className = Text(name='CLASS_NAME')
 	score = Float(name='SCORE', null=True)
 	atCreated = DateTime(name='AT_CREATED', default='CURRENT_TIMESTAMP')
 	atUpdated = Timestamp(name='AT_UPDATED', null=True)
@@ -235,7 +242,7 @@ if __name__ == '__main__':
 		_.atUpdated = int(round(datetime.now().timestamp()*1000))
 		PrettyPrint(_)
 	
-	students = con.run(Select(Student))
+	students = con.run(Select(Student).to(Student))
 	PrettyPrint(students)
 
 	classes = []
@@ -252,12 +259,12 @@ if __name__ == '__main__':
 		_.atUpdated = int(round(datetime.now().timestamp()*1000))
 		PrettyPrint(_)
 	
-	classes = con.run(Select(Class))
+	classes = con.run(Select(Class).to(Class))
 	PrettyPrint(classes)
 	
 	for scode, ccode in STUDENT_OF_CLASS:
-		s = con.run(Select(Student).where(IsEqualTo(Student.code, scode)))[0]
-		c = con.run(Select(Class).where(IsEqualTo(Class.code, ccode)))[0]
+		s = con.run(Get(Student).where(IsEqualTo(Student.code, scode)).to(Student))
+		c = con.run(Get(Class).where(IsEqualTo(Class.code, ccode)).to(Class))
 		con.run(Insert(StudentOfClass).values(
 			studentId=s.id,
 			studentName=s.name,
@@ -265,7 +272,7 @@ if __name__ == '__main__':
 			className=c.name,
 		))
 	
-	studentsOfClasses = con.run(Select(StudentOfClass))
+	studentsOfClasses = con.run(Select(StudentOfClass).to(StudentOfClass))
 	PrettyPrint(studentsOfClasses)
 	
 	for _ in studentsOfClasses:
@@ -280,7 +287,7 @@ if __name__ == '__main__':
 		)
 		PrettyPrint(o)
 	
-	studentsOfClasses = con.run(Select(StudentOfClass))
+	studentsOfClasses = con.run(Select(StudentOfClass).to(StudentOfClass))
 	PrettyPrint(studentsOfClasses)
 	
 	for _ in studentsOfClasses:
@@ -289,7 +296,7 @@ if __name__ == '__main__':
 		_.atUpdated = int(round(datetime.now().timestamp()*1000))
 		PrettyPrint(_)
 	
-	studentsOfClasses = con.run(Select(StudentOfClass))
+	studentsOfClasses = con.run(Select(StudentOfClass).to(StudentOfClass))
 	PrettyPrint(studentsOfClasses)
 	
 	exec = Select(Student).join(

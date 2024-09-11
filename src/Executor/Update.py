@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 
-from Liquirizia.DataAccessObject.Model import Executor, Fetchable
+from Liquirizia.DataAccessObject.Model import Executor, Fetch
 
 from ..Model import Table
 from .Expr import Expr
+
+from ..Cursor import Cursor
 
 __all__ = (
 	'Update'
 )
 
 
-class Update(Executor, Fetchable):
+class Update(Executor, Fetch):
 	def __init__(self, o: type[Table]):
 		self.obj = o
 		self.table = o.__properties__['name']
@@ -44,10 +46,7 @@ class Update(Executor, Fetchable):
 	def args(self):
 		return list(self.kwargs.values())
 
-	def fetch(self, con, rows):
-		_ = []
-		for i, row in enumerate(rows):
-			obj = self.obj(**dict(row))
-			obj.__connection__ = con
-			_.append(obj)
-		return _[0] if len(_) else None	
+	def fetch(self, cursor: Cursor):
+		obj = self.obj(**dict(cursor.row()))
+		obj.__cursor__ = cursor
+		return obj

@@ -6,64 +6,25 @@ from Liquirizia.Validator import Validator, Pattern
 from Liquirizia.Validator.Patterns import (
 	SetDefault,
 	IsToNone,
-	IsDateTime,
 	IsInteger,
+	IsFloat,
 )
 
 from .Object import Object
 
-
-from datetime import datetime
-
 __all__ = (
-	'DateTime',
-	'Timestamp',
+	'Integer',
+	'Float',
 )
 
 
-class DateTime(Object):
+class Integer(Object):
 	def __init__(
 			self, 
 			name: str, 
 			null: bool = False,
-			default: datetime = None,
-			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
-			fmt: str = '%Y-%m-%d %H:%M:%S',
-			fn: Handler = None,
-		):
-		class StrToDateTime(Pattern):
-			def __init__(self, fmt):
-				self.fmt = fmt
-				return
-			def __call__(self, parameter):
-				return datetime.strptime(parameter, self.fmt)
-		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]
-		patterns = []
-		if default:
-			patterns.append(SetDefault(default))
-		if null:
-			patterns.append(IsToNone(StrToDateTime(fmt), IsDateTime(*vaps)))
-		else:
-			patterns.append(StrToDateTime(fmt))
-			patterns.append(IsDateTime(*vaps))
-		self.fmt = fmt
-		super().__init__(
-			key=name, 
-			type='DATETIME',
-			null=null,
-			default=default,
-			va=Validator(*patterns), 
-			fn=fn,
-		)
-		return
-
-
-class Timestamp(Object):
-	def __init__(
-			self, 
-			name: str, 
-			null=False,
-			default=None,
+			default: str = None,
+			autoincrement: bool = False,
 			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
 			fn: Handler = None,
 		):
@@ -74,13 +35,45 @@ class Timestamp(Object):
 		if null:
 			patterns.append(IsToNone(IsInteger(*vaps)))
 		else:
-			patterns.append(IsInteger(*vaps))
+			if autoincrement:
+				patterns.append(IsToNone(IsInteger(*vaps)))
+			else:
+				patterns.append(IsInteger(*vaps))
 		super().__init__(
-			name,
-			type='TIMESTAMP',
+			key=name, 
+			type='INTEGER',
+			null=null,
+			default=default,
+			autoincrement=autoincrement,
+			va=Validator(*patterns), 
+		)
+		return
+
+
+class Float(Object):
+	def __init__(
+			self, 
+			name: str, 
+			null: bool = False,
+			default: float = None,
+			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
+			fn: Handler = None,
+		):
+		if not isinstance(vaps, (tuple, list)): vaps = [vaps]
+		patterns = []
+		if default:
+			patterns.append(SetDefault(default))
+		if null:
+			patterns.append(IsToNone(IsFloat(*vaps)))
+		else:
+			patterns.append(IsFloat(*vaps))
+		super().__init__(
+			key=name, 
+			type='REAL',
 			null=null,
 			default=default,
 			va=Validator(*patterns), 
 			fn=fn,
 		)
 		return
+

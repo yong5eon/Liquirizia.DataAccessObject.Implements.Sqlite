@@ -3,10 +3,9 @@
 from Liquirizia.DataModel import Model
 from Liquirizia.DataAccessObject.Model import Executors
 
-from ..Model import Type as ModelType
-from ..Type import Type
-from ..Constraint import PrimaryKey,ForeignKey
-from ..Index import Index, IndexUnique
+from ..Model import Type, Index
+from ..Type import Object
+from ..Constraint import PrimaryKey,ForeignKey, Unique
 
 __all__ = (
 	'Create'
@@ -15,29 +14,36 @@ __all__ = (
 
 class TypeToSQL(object):
 	def __call__(self, attr:Type) -> str:
-		return '{} {}{}{}{}{}{}{}'.format(
+		return '{} {}{}{}'.format(
 			attr.key,
 			attr.type,
 			' NOT NULL' if not attr.null else '',
 			' DEFAULT {}'.format(attr.default) if attr.default else '',
-			' PRIMARY KEY' if attr.primaryKey else '',
-			' AUTOINCREMENT' if attr.primaryKey and attr.autoincrement else '',
-			' DESC' if attr.primaryKey and attr.primaryKeyDesc else '',
-			' REFERENCES {}({})'.format(attr.referenceTable, attr.referenceKey) if attr.reference else '',
 		)
 
 class PrimaryKeyToSQL(object):
 	def __call__(self, key: PrimaryKey) -> str:
-		return 'PRIMARY KEY({})'.format(
-			', '.join(key.columns)
+		return 'PRIMARY KEY({}{})'.format(
+			', '.join(key.cols),
+			' AUTOINCREMENT' if key.autoincrement else '',
 		)
 
 class ForeignKeyToSQL(object):
 	def __call__(self, key: ForeignKey) -> str:
 		return 'FOREIGN KEY({}) REFERENCES {}({})'.format(
-			', '.join(key.columns),
-			key.table,
-			', '.join(key.references)
+			', '.join(key.cols),
+			key.reference,
+			', '.join(key.referenceCols)
+		)
+
+class UniqueToSQL(object):
+	def __call__(self, index: Unique) -> str:
+		return 'CREATE UNIQUE INDEX {}{} ON {}({}){}'.format(
+			'IF NOT EXISTS ' if index.notexists else '',
+			index.name,
+			index.table,
+			', '.join(index.colexprs),
+			' WHERE {}'.format(index.expr) if index.expr else '',
 		)
 
 class IndexToSQL(object):
@@ -50,42 +56,37 @@ class IndexToSQL(object):
 			' WHERE {}'.format(index.expr) if index.expr else '',
 		)
 
-class IndexUniqueToSQL(object):
-	def __call__(self, index: IndexUnique) -> str:
-		return 'CREATE UNIQUE INDEX {}{} ON {}({}){}'.format(
-			'IF NOT EXISTS ' if index.notexists else '',
-			index.name,
-			index.table,
-			', '.join(index.colexprs),
-			' WHERE {}'.format(index.expr) if index.expr else '',
-		)
 
 class TableToSQL(object):
 
 	TypeToSQL = TypeToSQL()
 	PrimaryKeyToSQL = PrimaryKeyToSQL()
 	ForeignKeyToSQL = ForeignKeyToSQL()
+	UniqueToSQL = UniqueToSQL()
 	IndexToSQL = IndexToSQL()
-	IndexUniqueToSQL = IndexUniqueToSQL()
 
 	def __call__(self, o: type[Model], notexist) -> str:
 		__ = []
 		_ = []
 		for k, v in o.__dict__.items():
-			if isinstance(v, Type):
+			if isinstance(v, Object):
 				_.append(self.TypeToSQL(v))
-		if o.__properties__['primaryKey']:
-			_.append(self.PrimaryKeyToSQL(o.__properties__['primaryKey']))
-		_.extend([self.ForeignKeyToSQL(foreignKey) for foreignKey in o.__properties__['foreignKeys']] if o.__properties__['foreignKeys'] else [])
+		for constraint in o.__properties__['constraints'] if o.__properties__['constraints'] else []:
+			if isinstance(constraint, PrimaryKey):
+				_.append(self.PrimaryKeyToSQL(constraint))
+				continue
+			if isinstance(constraint, ForeignKey):
+				_.append(self.ForeignKeyToSQL(constraint))
 		__.append(('CREATE TABLE {}{}({})'.format(
 			'IF NOT EXISTS ' if notexist else '',
 			o.__properties__['name'],
 			', '.join(_)
 		), ()))
-		for index in o.__properties__['indexes'] if o.__properties__['indexes'] else []:
-			if isinstance(index, IndexUnique):
-				__.append((self.IndexUniqueToSQL(index), ()))
+		for constraint in o.__properties__['constraints'] if o.__properties__['constraints'] else []:
+			if isinstance(constraint, Unique):
+				__.append((self.UniqueToSQL(constraint), ()))
 				continue
+		for index in o.__properties__['indexes'] if o.__properties__['indexes'] else []:
 			if isinstance(index, Index):
 				__.append((self.IndexToSQL(index), ()))
 				continue
@@ -110,8 +111,8 @@ class Create(Executors):
 		self.model = o
 		self.executors = []
 		fn = {
-			ModelType.Table : Create.TableToSQL,
-			ModelType.View  : Create.ViewToSQL,
+			Type.Table : Create.TableToSQL,
+			Type.View  : Create.ViewToSQL,
 		}.get(o.__properties__['type'], None)
 		if fn:
 			self.executors = fn(o, notexist)

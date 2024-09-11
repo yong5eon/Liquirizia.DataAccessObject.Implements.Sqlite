@@ -2,19 +2,14 @@
 
 from Liquirizia.DataModel import Model, Handler
 
-from .Type import Type as ModelType
 
-from ..Connection import Connection
-from ..Type import Type
-from ..Constraint import (
-	PrimaryKey,
-	ForeignKey,
-)
-from ..Index import (
-	Index,
-	IndexUnique,
-)
-from ..Handler import Update
+from .Type import Type 
+
+from ..Type import Object
+from ..Constraint import Constraint
+
+from .Index import Index
+
 
 __all__ = (
 	'Table'
@@ -25,14 +20,13 @@ class Table(object):
 	def __init__(
 		self, 
 		name: str, 
-		primaryKey: PrimaryKey = None,
-		foreignKeys: list[ForeignKey] = None,
-		indexes: list[Index|IndexUnique] = None,
-		fn: Handler = Update(),
+		constraints: list[Constraint] = None,
+		indexes: list[Index] = None,
+		fn: Handler = None
 	):
 		self.name = name
-		self.primaryKey = primaryKey
-		self.foreignKeys = foreignKeys
+		self.constraints = constraints
+		for constraint in self.constraints if self.constraints else []: constraint.table = name
 		self.indexes = indexes
 		for index in self.indexes if self.indexes else []: index.table = name
 		self.fn = fn
@@ -40,19 +34,19 @@ class Table(object):
 	
 	def __call__(self, obj: Model):
 		obj.__properties__ = {
-			'type': ModelType.Table,
+			'type': Type.Table,
 			'name': self.name,
-			'primaryKey': self.primaryKey,
-			'foreignKeys': self.foreignKeys,
+			'constraints': self.constraints,
 			'indexes': self.indexes,
 		}
 		def __new__(cls, **kwargs):
 			o = object.__new__(cls)
 			o.__object__ = dict()
+			o.__cursor__ = None
 			for k, v in cls.__dict__.items():
-				if isinstance(v, Type):
-					v.__init_object__(o, kwargs[v.key] if v.key in kwargs.keys() else None)
-					v.callback = self.fn
+				if not isinstance(v, Object): continue
+				if self.fn and not v.callback: v.callback = self.fn
+				v.__init_object__(o, kwargs[v.key] if v.key in kwargs.keys() else None)
 			return o
 		obj.__new__ = __new__
 		return obj

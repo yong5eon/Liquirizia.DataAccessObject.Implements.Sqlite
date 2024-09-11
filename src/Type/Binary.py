@@ -1,40 +1,39 @@
 # -*- coding: utf-8 -*-
 
+from Liquirizia.DataModel import Handler
+
 from Liquirizia.Validator import Validator, Pattern
 from Liquirizia.Validator.Patterns import (
-	SetDefault,
-	IsAbleToNone,
-	IsInteger
+	IsToNone,
+	IsByteArray,
 )
 
-from .Type import Type
+from .Object import Object
 
 __all__ = (
-	'Timestamp'
+	'ByteArray'
 )
 
 
-class Timestamp(Type):
+class ByteArray(Object):
 	def __init__(
 			self, 
 			name: str, 
-			null=False,
-			default=None,
+			null: bool = False,
 			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
+			fn: Handler = None,
 		):
 		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]
 		patterns = []
-		if default:
-			patterns.append(SetDefault(default))
 		if null:
-			patterns.append(IsAbleToNone(IsInteger(*vaps)))
+			patterns.append(IsToNone(IsByteArray(*vaps)))
 		else:
-			patterns.append(IsInteger(*vaps))
+			patterns.append(IsByteArray(*vaps))
 		super().__init__(
-			name,
-			type='TIMESTAMP',
+			key=name, 
+			type='BLOB',
 			null=null,
-			default=default,
-			va=Validator(*patterns), 
+			va=Validator(*patterns),
+			fn=fn,
 		)
 		return

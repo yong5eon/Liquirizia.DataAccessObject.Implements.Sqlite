@@ -2,7 +2,7 @@
 
 from Liquirizia.DataAccessObject import Helper, Error
 from Liquirizia.DataAccessObject.Errors import *
-from Liquirizia.DataAccessObject.Types.Database.Errors import *
+from Liquirizia.DataAccessObject.Properties.Database.Errors import *
 
 from Liquirizia.DataAccessObject.Implements.Sqlite import Configuration, Connection
 
@@ -50,7 +50,6 @@ if __name__ == '__main__':
 		con.execute("INSERT INTO LOG(TEXT) VALUES(?)", ('TEXT3'))
 
 		con.commit()
-		print('{} rows inserted'.format(con.affected()), file=sys.stdout)
 	except ExecuteError as e:
 		con.rollback()
 		print(str(e), file=sys.stderr)
@@ -65,11 +64,9 @@ if __name__ == '__main__':
 		print(str(e), file=sys.stderr)
 
 	try:
-		con.execute('SELECT * FROM LOG')
+		ctx = con.execute('SELECT * FROM LOG')
 
-		rows = con.rows()
-
-		for i, row in enumerate(rows):
+		for i, row in enumerate(ctx.rows()):
 			print('{} : {}'.format(i, row), file=sys.stdout)
 
 		con.execute('DROP TABLE IF EXISTS LOG')

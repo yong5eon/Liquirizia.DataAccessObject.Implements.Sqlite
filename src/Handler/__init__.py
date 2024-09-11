@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from .Update import Update
+from .Updater import Updater
 
 __all__ = (
-	'Update',
+	'Updater',
 )

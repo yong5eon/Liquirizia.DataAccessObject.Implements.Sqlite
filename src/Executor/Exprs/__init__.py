@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from .Alias import Alias
-from .IsNull import IsNull
-from .IsNotNull import IsNotNull
+from .Is import (
+	IsNull,
+	IsNotNull,
+)
 
 __all__ = (
 	'Alias',

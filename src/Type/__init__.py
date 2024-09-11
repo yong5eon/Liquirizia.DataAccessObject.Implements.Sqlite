@@ -1,20 +1,37 @@
 # -*- coding: utf-8 -*-
 
-from .Type import Type
+from .Object import Object
 
-from .Integer import Integer
-from .Float import Float
-from .Text import Text
-from .BLOB import BLOB
-from .DateTime import DateTime
-from .Timestamp import Timestamp
+from .Numeric import (
+	Integer,
+	Float,
+)
+from .String import Text
+from .Binary import ByteArray
+from .DateTime import (
+	DateTime,
+	Timestamp,
+)
 
 __all__ = (
-	'Type',
-	'Integer',
-	'Float',
-	'Text',
-	'BLOB',
-	'DateTime',
-	'Timestamp',
+	'Object',
+	'Integer', 'INTEGER',
+	'Float', 'FLOAT', 'REAL',
+	'Text', 'TEXT', 'STRING',
+	'ByteArray', 'BLOB',
+	'DateTime', 'DATETIME',
+	'Timestamp', 'TIMESTAMP',
 )
+
+# NUMERIC
+INTEGER = Integer
+FLOAT = Float
+REAL = Float
+# TEXT
+TEXT = Text
+STRING = Text
+# BINARY
+BLOB = ByteArray
+# DATETIME
+DATETIME = DateTime
+TIMESTAMP = Timestamp
