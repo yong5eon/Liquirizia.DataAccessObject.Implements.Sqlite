@@ -2,7 +2,6 @@
 
 from ..Expr import Expr
 from ...Type import Object
-from ...Encoder import Encoder
 
 __all__ = (
 	'IsEqualTo',
@@ -20,13 +19,12 @@ class IsEqualTo(Expr):
 	def __init__(self, attr: Object, other) -> None:
 		self.attr = attr
 		self.other = other
-		self.encoder = Encoder()
 		return
 
 	def __str__(self):
 		return '{} = {}'.format(
 			str(self.attr),
-			'{}.{}'.format(self.other.model.__properties__['name'], self.other.key) if isinstance(self.other, Object) else self.encoder(self.other),
+			'{}.{}'.format(self.other.model.__properties__['name'], self.other.key) if isinstance(self.other, Object) else self.encode(self.other),
 		)
 
 
@@ -36,13 +34,12 @@ class IsNotEqualTo(Expr):
 	def __init__(self, attr: Object, other) -> None:
 		self.attr = attr
 		self.other = other
-		self.encoder = Encoder()
 		return
 
 	def __str__(self):
 		return '{} != {}'.format(
 			str(self.attr),
-			str(self.other) if isinstance(self.other, Object) else self.encoder(self.other),
+			str(self.other) if isinstance(self.other, Object) else self.encode(self.other),
 		)
 
 
@@ -52,13 +49,12 @@ class IsGreaterEqualTo(Expr):
 	def __init__(self, attr: Object, other) -> None:
 		self.attr = attr
 		self.other = other
-		self.encoder = Encoder()
 		return
 
 	def __str__(self):
 		return '{} >= {}'.format(
 			str(self.attr),
-			str(self.other) if isinstance(self.other, Object) else self.encoder(self.other),
+			str(self.other) if isinstance(self.other, Object) else self.encode(self.other),
 		)
 
 class IsGreaterThan(Expr):
@@ -67,13 +63,12 @@ class IsGreaterThan(Expr):
 	def __init__(self, attr, other) -> None:
 		self.attr = attr
 		self.other = other
-		self.encoder = Encoder()
 		return
 
 	def __str__(self):
 		return '{} > {}'.format(
 			str(self.attr) if isinstance(self.attr, Object) else self.attr,
-			str(self.other) if isinstance(self.other, Object) else self.encoder(self.other),
+			str(self.other) if isinstance(self.other, Object) else self.encode(self.other),
 		)
 
 
@@ -84,13 +79,12 @@ class IsLessEqualTo(Expr):
 	def __init__(self, attr: Object, other) -> None:
 		self.attr = attr
 		self.other = other
-		self.encoder = Encoder()
 		return
 
 	def __str__(self):
 		return '{} <= {}'.format(
 			str(self.attr),
-			str(self.other) if isinstance(self.other, Object) else self.encoder(self.other),
+			str(self.other) if isinstance(self.other, Object) else self.encode(self.other),
 		)
 	
 
@@ -100,11 +94,10 @@ class IsLessThan(Expr):
 	def __init__(self, attr: Object, other) -> None:
 		self.attr = attr
 		self.other = other
-		self.encoder = Encoder()
 		return
 
 	def __str__(self):
 		return '{} < {}'.format(
 			str(self.attr),
-			str(self.other) if isinstance(self.other, Object) else self.encoder(self.other),
+			str(self.other) if isinstance(self.other, Object) else self.encode(self.other),
 		)
