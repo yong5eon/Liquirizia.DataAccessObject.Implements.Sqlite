@@ -26,7 +26,7 @@ class Delete(Executor):
 			self.kwargs[v.key] = v.validator(kwargs[k])
 		return self
 	
-	def where(self, *args: Type[list[Expr]]):
+	def where(self, *args):
 		self.conds = args
 		return self
 	
