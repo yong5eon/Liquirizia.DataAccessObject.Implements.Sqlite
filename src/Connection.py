@@ -22,6 +22,8 @@ from .Session import Session
 from sqlite3 import connect, Row
 from sqlite3 import DatabaseError, IntegrityError, ProgrammingError, OperationalError, NotSupportedError
 
+from typing import Union
+
 __all__ = (
 	'DatabaseAccessObject'
 )
@@ -106,7 +108,7 @@ class Connection(BaseConnection, Database, Run):
 			raise Error(str(e), error=e)
 		return
 
-	def run(self, executor: type[Executor|Executors]):
+	def run(self, executor: Union[Executor,Executors]):
 		try:
 			cursor = self.connection.cursor()
 			def execs(execs: Executors):
