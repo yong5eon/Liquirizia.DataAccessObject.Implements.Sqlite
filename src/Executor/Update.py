@@ -7,13 +7,15 @@ from .Expr import Expr
 
 from ..Cursor import Cursor
 
+from typing import Type
+
 __all__ = (
 	'Update'
 )
 
 
 class Update(Executor, Fetch):
-	def __init__(self, o: type[Table]):
+	def __init__(self, o: Type[Table]):
 		self.obj = o
 		self.table = o.__properties__['name']
 		self.kwargs = {}
@@ -26,7 +28,7 @@ class Update(Executor, Fetch):
 			self.kwargs[v.key] = v.validator(kwargs[k])
 		return self
 	
-	def where(self, *args: type[list[Expr]]):
+	def where(self, *args):
 		self.conds = args
 		return self
 	

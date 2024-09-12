@@ -12,7 +12,7 @@ __all__ = (
 class Join(Expr):
 	"""Join Class"""
 
-	def __init__(self, expr: str, table: Table, *args: type[list[Expr]]) -> None:
+	def __init__(self, expr: str, table: Table, *args) -> None:
 		self.expr = expr
 		self.table = table
 		self.args = args

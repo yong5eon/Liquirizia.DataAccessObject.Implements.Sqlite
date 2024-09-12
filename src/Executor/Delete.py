@@ -5,13 +5,15 @@ from Liquirizia.DataAccessObject.Model import Executor
 from ..Model import Table
 from .Expr import Expr
 
+from typing import Type
+
 __all__ = (
 	'Update'
 )
 
 
 class Delete(Executor):
-	def __init__(self, o: type[Table]):
+	def __init__(self, o: Type[Table]):
 		self.obj = o
 		self.table = o.__properties__['name']
 		self.kwargs = {}
@@ -24,7 +26,7 @@ class Delete(Executor):
 			self.kwargs[v.key] = v.validator(kwargs[k])
 		return self
 	
-	def where(self, *args: type[list[Expr]]):
+	def where(self, *args: Type[list[Expr]]):
 		self.conds = args
 		return self
 	
