@@ -8,6 +8,8 @@ from Liquirizia.Validator.Patterns import (
 	IsToNone,
 	IsDateTime,
 	IsInteger,
+	If,
+	IsString,
 )
 
 from .Object import Object
@@ -28,25 +30,24 @@ class DateTime(Object):
 			null: bool = False,
 			default: datetime = None,
 			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
-			fmt: str = '%Y-%m-%d %H:%M:%S',
 			fn: Handler = None,
 		):
-		class StrToDateTime(Pattern):
-			def __init__(self, fmt):
-				self.fmt = fmt
-				return
+		class ISOFormatStringToDateTime(Pattern):
 			def __call__(self, parameter):
-				return datetime.strptime(parameter, self.fmt)
+				return datetime.fromisoformat(parameter)
 		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]
 		patterns = []
 		if default:
 			patterns.append(SetDefault(default))
 		if null:
-			patterns.append(IsToNone(StrToDateTime(fmt), IsDateTime(*vaps)))
+			patterns.append(
+				IsToNone(
+					If(IsString(ISOFormatStringToDateTime())),
+					IsDateTime(*vaps),
+				)
+			)
 		else:
-			patterns.append(StrToDateTime(fmt))
 			patterns.append(IsDateTime(*vaps))
-		self.fmt = fmt
 		super().__init__(
 			key=name, 
 			type='DATETIME',

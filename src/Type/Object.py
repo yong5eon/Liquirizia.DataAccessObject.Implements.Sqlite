@@ -17,7 +17,6 @@ class Object(Attribute):
 			type: str,
 			null: bool = False,
 			default: str = None,
-			autoincrement: bool = False,
 			va: Validator = Validator(),
 			fn: Handler = None
 		):
@@ -26,7 +25,6 @@ class Object(Attribute):
 		self.type = type
 		self.null = null
 		self.default = default
-		self.autoincrement = autoincrement
 		return
 	
 	def __str__(self):

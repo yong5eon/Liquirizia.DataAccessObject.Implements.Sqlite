@@ -24,7 +24,6 @@ class Integer(Object):
 			name: str, 
 			null: bool = False,
 			default: str = None,
-			autoincrement: bool = False,
 			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
 			fn: Handler = None,
 		):
@@ -35,16 +34,12 @@ class Integer(Object):
 		if null:
 			patterns.append(IsToNone(IsInteger(*vaps)))
 		else:
-			if autoincrement:
-				patterns.append(IsToNone(IsInteger(*vaps)))
-			else:
-				patterns.append(IsInteger(*vaps))
+			patterns.append(IsInteger(*vaps))
 		super().__init__(
 			key=name, 
 			type='INTEGER',
 			null=null,
 			default=default,
-			autoincrement=autoincrement,
 			va=Validator(*patterns), 
 		)
 		return
