@@ -55,7 +55,6 @@ target/
 __pypackages__/
 
 # Liquirizia
-.github
 .vscode
 .idea
 .old
