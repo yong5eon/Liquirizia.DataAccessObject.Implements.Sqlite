@@ -18,7 +18,7 @@ from .Cursor import Cursor
 from sqlite3 import Connection as SqliteConnection
 from sqlite3 import DatabaseError, IntegrityError, ProgrammingError, OperationalError, NotSupportedError
 
-from typing import Type, Union
+from typing import Union
 
 __all__ = (
 	'Session'
