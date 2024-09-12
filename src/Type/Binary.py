@@ -10,6 +10,8 @@ from Liquirizia.Validator.Patterns import (
 
 from .Object import Object
 
+from typing import Union, Tuple, List
+
 __all__ = (
 	'ByteArray'
 )
@@ -20,7 +22,7 @@ class ByteArray(Object):
 			self, 
 			name: str, 
 			null: bool = False,
-			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
+			vaps: Union[Pattern, Tuple[Pattern], List[Pattern]] = [],
 			fn: Handler = None,
 		):
 		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]

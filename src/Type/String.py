@@ -11,6 +11,8 @@ from Liquirizia.Validator.Patterns import (
 
 from .Object import Object
 
+from typing import Union, Tuple, List
+
 __all__ = (
 	'Text'
 )
@@ -22,7 +24,7 @@ class Text(Object):
 			name: str, 
 			null: bool = False,
 			default: str = None,
-			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
+			vaps: Union[Pattern, Tuple[Pattern], List[Pattern]] = [],
 			fn: Handler = None
 		):
 		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]

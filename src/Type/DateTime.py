@@ -14,8 +14,8 @@ from Liquirizia.Validator.Patterns import (
 
 from .Object import Object
 
-
 from datetime import datetime
+from typing import Union, Tuple, List
 
 __all__ = (
 	'DateTime',
@@ -29,7 +29,7 @@ class DateTime(Object):
 			name: str, 
 			null: bool = False,
 			default: datetime = None,
-			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
+			vaps: Union[Pattern, Tuple[Pattern], List[Pattern]] = [],
 			fn: Handler = None,
 		):
 		class ISOFormatStringToDateTime(Pattern):
@@ -65,7 +65,7 @@ class Timestamp(Object):
 			name: str, 
 			null=False,
 			default=None,
-			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
+			vaps: Union[Pattern, Tuple[Pattern], List[Pattern]] = [],
 			fn: Handler = None,
 		):
 		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]
