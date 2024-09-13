@@ -8,6 +8,9 @@ from Liquirizia.Validator.Patterns import (
 	IsToNone,
 	IsInteger,
 	IsFloat,
+	If,
+	ToInteger,
+	ToFloat,
 )
 
 from .Object import Object
@@ -61,9 +64,17 @@ class Float(Object):
 		if default:
 			patterns.append(SetDefault(default))
 		if null:
-			patterns.append(IsToNone(IsFloat(*vaps)))
+			patterns.append(
+				IsToNone(
+					If(IsInteger(ToFloat())),
+					IsFloat(*vaps),
+				)
+			)
 		else:
-			patterns.append(IsFloat(*vaps))
+			patterns.append(
+				If(IsInteger(ToFloat())),
+				IsFloat(*vaps),
+			)
 		super().__init__(
 			key=name, 
 			type='REAL',
