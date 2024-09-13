@@ -2,6 +2,8 @@
 
 from .Constraint import Constraint
 
+from typing import Union, Tuple, List
+
 __all__ = (
 	'Unique'
 )
@@ -11,7 +13,7 @@ class Unique(Constraint):
 	def __init__(
 		self, 
 		name: str,
-		colexprs: list[str],
+		colexprs: Union[Tuple[str],List[str]],
 		expr: str = None,
 		notexists: bool = None,
 	):

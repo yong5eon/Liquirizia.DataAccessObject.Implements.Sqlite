@@ -8,12 +8,14 @@ from Liquirizia.Validator.Patterns import (
 	IsToNone,
 	IsDateTime,
 	IsInteger,
+	If,
+	IsString,
 )
 
 from .Object import Object
 
-
 from datetime import datetime
+from typing import Union, Tuple, List
 
 __all__ = (
 	'DateTime',
@@ -27,26 +29,28 @@ class DateTime(Object):
 			name: str, 
 			null: bool = False,
 			default: datetime = None,
-			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
-			fmt: str = '%Y-%m-%d %H:%M:%S',
+			vaps: Union[Pattern, Tuple[Pattern], List[Pattern]] = [],
 			fn: Handler = None,
 		):
-		class StrToDateTime(Pattern):
-			def __init__(self, fmt):
-				self.fmt = fmt
-				return
+		class ISOFormatStringToDateTime(Pattern):
 			def __call__(self, parameter):
-				return datetime.strptime(parameter, self.fmt)
+				return datetime.fromisoformat(parameter)
 		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]
 		patterns = []
 		if default:
 			patterns.append(SetDefault(default))
 		if null:
-			patterns.append(IsToNone(StrToDateTime(fmt), IsDateTime(*vaps)))
+			patterns.append(
+				IsToNone(
+					If(IsString(ISOFormatStringToDateTime())),
+					IsDateTime(*vaps),
+				)
+			)
 		else:
-			patterns.append(StrToDateTime(fmt))
-			patterns.append(IsDateTime(*vaps))
-		self.fmt = fmt
+			patterns.append(
+				If(IsString(ISOFormatStringToDateTime())),
+				IsDateTime(*vaps),
+			)
 		super().__init__(
 			key=name, 
 			type='DATETIME',
@@ -64,7 +68,7 @@ class Timestamp(Object):
 			name: str, 
 			null=False,
 			default=None,
-			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
+			vaps: Union[Pattern, Tuple[Pattern], List[Pattern]] = [],
 			fn: Handler = None,
 		):
 		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]

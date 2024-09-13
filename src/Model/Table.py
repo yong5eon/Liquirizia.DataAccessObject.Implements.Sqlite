@@ -10,6 +10,8 @@ from ..Constraint import Constraint
 
 from .Index import Index
 
+from typing import Union, Tuple, List
+
 
 __all__ = (
 	'Table'
@@ -20,8 +22,8 @@ class Table(object):
 	def __init__(
 		self, 
 		name: str, 
-		constraints: list[Constraint] = None,
-		indexes: list[Index] = None,
+		constraints: Union[Tuple[Constraint],List[Constraint]] = None,
+		indexes: Union[Tuple[Index],List[Index]] = None,
 		fn: Handler = None
 	):
 		self.name = name

@@ -9,13 +9,15 @@ from .Expr import Expr
 
 from ..Cursor import Cursor
 
+from typing import Type
+
 __all__ = (
 	'Select'
 )
 
 
 class Select(Executor, Fetch):
-	def __init__(self, o: type[Table]):
+	def __init__(self, o: Type[Table]):
 		self.obj = o
 		self.table = o.__properties__['name']
 		self.kwargs = {}
@@ -34,7 +36,7 @@ class Select(Executor, Fetch):
 		self.joins = args
 		return self
 
-	def where(self, *args: type[list[Expr]]):
+	def where(self, *args):
 		self.conds = args
 		return self
 
@@ -42,11 +44,11 @@ class Select(Executor, Fetch):
 		self.grps = args
 		return self
 	
-	def having(self, *args: type[list[Expr]]):
+	def having(self, *args):
 		self.havs = args
 		return self
 
-	def orderBy(self, *args: type[list[Expr]]):
+	def orderBy(self, *args):
 		self.ords = args
 		return self
 
@@ -59,7 +61,7 @@ class Select(Executor, Fetch):
 		self.vals = args
 		return self
 	
-	def to(self, o: type[Model]):
+	def to(self, o: Type[Model]):
 		self.toObj = o
 		return self
 	

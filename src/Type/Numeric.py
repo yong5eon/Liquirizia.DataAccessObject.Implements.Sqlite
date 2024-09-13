@@ -8,9 +8,14 @@ from Liquirizia.Validator.Patterns import (
 	IsToNone,
 	IsInteger,
 	IsFloat,
+	If,
+	ToInteger,
+	ToFloat,
 )
 
 from .Object import Object
+
+from typing import Union, Tuple, List
 
 __all__ = (
 	'Integer',
@@ -24,8 +29,7 @@ class Integer(Object):
 			name: str, 
 			null: bool = False,
 			default: str = None,
-			autoincrement: bool = False,
-			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
+			vaps: Union[Pattern, Tuple[Pattern], List[Pattern]] = [],
 			fn: Handler = None,
 		):
 		if vaps and not isinstance(vaps, (tuple, list)): vaps = [vaps]
@@ -35,16 +39,12 @@ class Integer(Object):
 		if null:
 			patterns.append(IsToNone(IsInteger(*vaps)))
 		else:
-			if autoincrement:
-				patterns.append(IsToNone(IsInteger(*vaps)))
-			else:
-				patterns.append(IsInteger(*vaps))
+			patterns.append(IsInteger(*vaps))
 		super().__init__(
 			key=name, 
 			type='INTEGER',
 			null=null,
 			default=default,
-			autoincrement=autoincrement,
 			va=Validator(*patterns), 
 		)
 		return
@@ -56,7 +56,7 @@ class Float(Object):
 			name: str, 
 			null: bool = False,
 			default: float = None,
-			vaps: tuple[Pattern, tuple[Pattern], list[Pattern]] = [],
+			vaps: Tuple[Pattern, Tuple[Pattern], List[Pattern]] = [],
 			fn: Handler = None,
 		):
 		if not isinstance(vaps, (tuple, list)): vaps = [vaps]
@@ -64,9 +64,17 @@ class Float(Object):
 		if default:
 			patterns.append(SetDefault(default))
 		if null:
-			patterns.append(IsToNone(IsFloat(*vaps)))
+			patterns.append(
+				IsToNone(
+					If(IsInteger(ToFloat())),
+					IsFloat(*vaps),
+				)
+			)
 		else:
-			patterns.append(IsFloat(*vaps))
+			patterns.append(
+				If(IsInteger(ToFloat())),
+				IsFloat(*vaps),
+			)
 		super().__init__(
 			key=name, 
 			type='REAL',

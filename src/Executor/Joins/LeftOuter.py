@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from ..Join import Join
-
-from ..Expr import Expr
 from ...Model import Table
 
 __all__ = (
@@ -13,6 +11,6 @@ __all__ = (
 class LeftOuter(Join):
 	"""Left Outer Class"""
 
-	def __init__(self, table: Table, *args: type[list[Expr]]) -> None:
+	def __init__(self, table: Table, *args) -> None:
 		super(LeftOuter, self).__init__('LEFT OUTER', table, *args)
 		return

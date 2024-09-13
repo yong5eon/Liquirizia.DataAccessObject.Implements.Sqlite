@@ -4,13 +4,15 @@ from Liquirizia.DataAccessObject.Model import Executor, Fetch
 
 from ..Model import Table
 
+from typing import Type
+
 __all__ = (
 	'Insert'
 )
 
 
 class Insert(Executor, Fetch):
-	def __init__(self, o: type[Table]):
+	def __init__(self, o: Type[Table]):
 		self.obj = o
 		self.table = o.__properties__['name']
 		self.kwargs = {}

@@ -3,9 +3,11 @@
 from Liquirizia.DataModel import Model
 from Liquirizia.DataAccessObject.Model import Executors
 
-from ..Model import Type, Index
+from ..Model import Type as ModelType, Index
 from ..Type import Object
 from ..Constraint import PrimaryKey,ForeignKey, Unique
+
+from typing import Type
 
 __all__ = (
 	'Create'
@@ -13,7 +15,7 @@ __all__ = (
 
 
 class TypeToSQL(object):
-	def __call__(self, attr:Type) -> str:
+	def __call__(self, attr: Object) -> str:
 		return '{} {}{}{}'.format(
 			attr.key,
 			attr.type,
@@ -65,7 +67,7 @@ class TableToSQL(object):
 	UniqueToSQL = UniqueToSQL()
 	IndexToSQL = IndexToSQL()
 
-	def __call__(self, o: type[Model], notexist) -> str:
+	def __call__(self, o: Type[Model], notexist) -> str:
 		__ = []
 		_ = []
 		for k, v in o.__dict__.items():
@@ -94,7 +96,7 @@ class TableToSQL(object):
 	
 
 class ViewToSQL(object):
-	def __call__(self, o: type[Model], notexist) -> str:
+	def __call__(self, o: Type[Model], notexist) -> str:
 		return [('CREATE VIEW {}{} AS {}'.format(
 			'IF NOT EXISTS ' if notexist else '',
 			o.__properties__['name'],
@@ -107,12 +109,12 @@ class Create(Executors):
 	TableToSQL = TableToSQL()
 	ViewToSQL = ViewToSQL()
 
-	def __init__(self, o: type[Model], notexist: bool = True):
+	def __init__(self, o: Type[Model], notexist: bool = True):
 		self.model = o
 		self.executors = []
 		fn = {
-			Type.Table : Create.TableToSQL,
-			Type.View  : Create.ViewToSQL,
+			ModelType.Table : Create.TableToSQL,
+			ModelType.View  : Create.ViewToSQL,
 		}.get(o.__properties__['type'], None)
 		if fn:
 			self.executors = fn(o, notexist)

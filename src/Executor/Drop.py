@@ -2,9 +2,11 @@
 
 from Liquirizia.DataAccessObject.Model import Executors
 from Liquirizia.DataModel import Model
-from Liquirizia.DataAccessObject.Implements.Sqlite.Model import Type
 
+from ..Model import Type as ModelType
 from ..Constraint import Unique
+
+from typing import Type
 
 __all__ = (
 	'Drop'
@@ -12,9 +14,9 @@ __all__ = (
 
 
 class Drop(Executors):
-	def __init__(self, o: type[Model], exist: bool = True):
+	def __init__(self, o: Type[Model], exist: bool = True):
 		self.executors = []
-		if o.__properties__['type'] == Type.Table:
+		if o.__properties__['type'] == ModelType.Table:
 			for constraint in o.__properties__['constraints'] if o.__properties__['constraints'] else []:
 				if not isinstance(constraint, Unique): continue
 				self.executors.append(('DROP INDEX {}{}'.format(
@@ -30,7 +32,7 @@ class Drop(Executors):
 				'IF EXISTS ' if exist else '',
 				o.__properties__['name'],
 			), ()))
-		if o.__properties__['type'] == Type.View:
+		if o.__properties__['type'] == ModelType.View:
 			self.executors.append(('DROP VIEW {}{}'.format(
 				'IF EXISTS ' if exist else '',
 				o.__properties__['name'],
