@@ -47,7 +47,10 @@ class DateTime(Object):
 				)
 			)
 		else:
-			patterns.append(IsDateTime(*vaps))
+			patterns.append(
+				If(IsString(ISOFormatStringToDateTime())),
+				IsDateTime(*vaps),
+			)
 		super().__init__(
 			key=name, 
 			type='DATETIME',
