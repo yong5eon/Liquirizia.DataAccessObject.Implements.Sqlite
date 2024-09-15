@@ -153,7 +153,7 @@ class TestDataAccessObject(Case):
 		return
 
 	@Order(6)
-	def testUpdateWithAutoUpdater(self):
+	def testDelete(self):
 		con = Helper.Get('Sample')
 		con.run(Create(TestModel))
 		inserted = con.run(Insert(TestModel).values(
